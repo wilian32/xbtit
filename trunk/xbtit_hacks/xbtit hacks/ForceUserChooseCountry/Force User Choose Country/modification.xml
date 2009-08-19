@@ -1,0 +1,24 @@
+<hack>
+  <title>Force User Choose Country</title>
+  <author>Confe</author>
+  <version>1.0</version>
+  <!-- account.php -->
+  <file>
+  <name>"$DEFAULT_ROOT/account.php"</name>
+  <operation>
+      <search><![CDATA[if ($pwd != $pwd1) {
+    err_msg($language["ERROR"],$language["DIF_PASSWORDS"]);
+    stdfoot();
+    exit;
+    }]]></search>
+	      <action>"add"</action>
+      <where>"after"</where>
+      <data><![CDATA[	
+	  //Start - Force User Choose Country 
+if ($idflag==0 || $idflag==100) {
+    err_msg($language["ERROR"], " You must specify your country<br>");
+	stdfoot();
+	exit;
+}
+//End - Force User Choose Country]]></data>
+    </operation>

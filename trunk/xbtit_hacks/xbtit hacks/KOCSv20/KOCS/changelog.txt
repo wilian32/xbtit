@@ -1,0 +1,6 @@
+2.0 - 2008.12.05 - Initial Release
+ADDED - get_khez_config, optimized function for config save/load
+ADDED - english/lang_khez.php, file for shared hack language vars
+ADDED - 7 language vars
+
+0.1 - 1.9 - Development Stage - Big thanks to cuds@cartoonchaos.org for letting me test this

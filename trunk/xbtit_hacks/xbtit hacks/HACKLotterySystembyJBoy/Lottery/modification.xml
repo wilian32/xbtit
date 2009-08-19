@@ -1,0 +1,354 @@
+<hack>
+	<title>Lottery</title>
+	<author>JBoy (Original: Gewa)</author>
+	<version>v1.0</version>
+
+	<file>
+		<name>"database"</name>
+		<operation>
+			<action>"sql"</action>
+			<data><![CDATA[CREATE TABLE `{$db_prefix}lottery_config` (
+  `id` int(11) NOT NULL default '0',
+  `lot_expire_date` datetime NOT NULL default '0000-00-00 00:00:00',
+  `lot_number_winners` varchar(20) NOT NULL default '',
+  `lot_number_to_win` varchar(20) NOT NULL default '',
+  `lot_amount` varchar(20) NOT NULL default '',
+  `lot_status` enum('yes','no','closed') NOT NULL default 'yes',
+  `limit_buy` char(2) NOT NULL default '',
+  `sender_id` CHAR( 8 ) NOT NULL DEFAULT '2',
+  PRIMARY KEY  (`id`)
+) ENGINE=MyISAM;]]></data>
+		</operation>
+		<operation>
+			<action>"sql"</action>
+			<data><![CDATA[INSERT INTO `{$db_prefix}lottery_config` (`id`, `lot_expire_date`, `lot_number_winners`, `lot_number_to_win`, `lot_amount`, `lot_status`, `limit_buy`, `sender_id`) VALUES
+(0, '0000-00-00 00:00:00', '', '', '', '', '', '2'),
+(1, '0000-00-00 00:00:00', '0', '0', '0', 'closed', '0', '2');]]></data>
+		</operation>
+		<operation>
+			<action>"sql"</action>
+			<data><![CDATA[CREATE TABLE `{$db_prefix}lottery_tickets` (
+  `id` int(4) NOT NULL auto_increment,
+  `user` int(11) NOT NULL default '0',
+  PRIMARY KEY  (`id`)
+) ENGINE=MyISAM;]]></data>
+		</operation>
+		<operation>
+			<action>"sql"</action>
+			<data><![CDATA[CREATE TABLE `{$db_prefix}lottery_winners` (
+  `id` int(4) NOT NULL auto_increment,
+  `win_user` varchar(20) NOT NULL default '',
+  `windate` varchar(20) NOT NULL default '',
+  `price` varchar(20) NOT NULL default '',
+  PRIMARY KEY  (`id`)
+) ENGINE=MyISAM;]]></data>
+		</operation>
+		<operation>
+			<action>"sql"</action>
+			<data><![CDATA[INSERT INTO `{$db_prefix}blocks` (`blockid` ,`content` ,`position` ,`sortid` ,`status` ,`title` ,`cache` ,`minclassview` ,`maxclassview`) VALUES (NULL , 'lottery', 'r', '10', '1', 'BLOCK_LOTTERY', 'yes', '2', '8');]]></data>
+		</operation>
+	</file>
+
+	<file>
+		<name>"$DEFAULT_ROOT/admin/admin.menu.php"</name>
+		<operation>
+			<search><![CDATA[                          2=>array(
+                    "url"=>"index.php?page=admin&amp;user=".$CURUSER["uid"]."&amp;code=".$CURUSER["random"]."&amp;do=logview" ,
+                    "description"=>$language["ACP_SITE_LOG"])]]></search>
+			<action>"add"</action>
+			<data><![CDATA[,
+                          3=>array(
+                    "url"=>"index.php?page=admin&amp;user=".$CURUSER["uid"]."&amp;code=".$CURUSER["random"]."&amp;do=lottery_settings" ,
+                    "description"=>$language["ACP_LOTTERY"])]]></data>
+			<where>"after"</where>
+		</operation>
+	</file>
+
+	<file>
+		<name>"$DEFAULT_LANGUAGE_PATH/lang_admin.php"</name>
+		<operation>
+			<search><![CDATA[?>]]></search>
+			<action>"add"</action>
+			<data><![CDATA[$language["ACP_LOTTERY"]="Lottery";
+$language["LOTT_SETTINGS"]="Lottery Settings";
+$language["EXPIRE_DATE"]="Expire date";
+$language["EXPIRE_TIME"]="Expire time";
+$language["EXPIRE_DATE_VIEW"]="(0000-00-00 must be this format)";
+$language["EXPIRE_TIME_VIEW"]="in whole hours";
+$language["IS_SET"]="is current date and time)";
+$language["NUM_WINNERS"]="Number of winners";
+$language["TICKET_COST"]="Amount to pay (per ticket)";
+$language["MIN_WIN"]="Min Amount to win";
+$language["LOTTERY_STATUS"]="Lottery enabled";
+$language["VIEW_SELLED"]="View Sold Tickets";
+$language["ACP_SELLED_TICKETS"]="Sold Tickets";
+$language["NO_TICKET_SOLD"]="No tickets sold";
+$language["TICKETS"]="tickets";
+$language["PURCHASE"]="Purchase";
+$language["SOLD_TICKETS"]="Tickets Sold";
+$language["LOTTERY"]="Lottery";
+$language["MAX_BUY"]="Maximun amount user can buy";
+$language["LOTT_ID"] = "Id";
+$language["LOTT_USERNAME"] = "Username";
+$language["LOTT_NUMBER_OF_TICKETS"] = "Number of tickets";
+$language["BACK_TO_LOTTERY"]="Back to Lottery";
+$language["LOTT_SENDER_ID"]="Sender ID for PM";]]></data>
+			<where>"before"</where>
+		</operation>
+	</file>
+
+	<file>
+		<name>"$DEFAULT_LANGUAGE_PATH/lang_blocks.php"</name>
+		<operation>
+			<search><![CDATA[?>]]></search>
+			<action>"add"</action>
+			<data><![CDATA[$language["BLOCK_LOTTERY"]="Lottery";]]></data>
+			<where>"before"</where>
+		</operation>
+	</file>
+
+	<file>
+		<name>"$DEFAULT_LANGUAGE_PATH/lang_main.php"</name>
+		<operation>
+			<search><![CDATA[?>]]></search>
+			<action>"add"</action>
+			<data><![CDATA[$language["NOT_USER_CLASS"]="<h2>Sorry</h2><p>You must be registered to be able to buy tickets.</p>";
+$language["CANNOT_SELL_CLOSED"]="Sorry, I cannot sell you any tickets! The lottery is closed!";
+$language["LOTTERY"]="Lottery";
+$language["LOTT_LIMIT_PURCHASE"]="The max number of tickets you can purchase is";
+$language["LOTT_LIMIT_BUY"]="The max number of tickets allowed to buy is";
+$language["LOTTERY_PM_SUBJECT"]="You have won a price with the lottery";
+$language["LOTTERY_PM_MESSAGE"]="Congratulations you have won a price with our Lottery. Your price has been added to your account.";]]></data>
+			<where>"before"</where>
+		</operation>
+	</file>
+
+	<file>
+		<name>"$DEFAULT_ROOT/admin/admin.index.php"</name>
+		<operation>
+			<search><![CDATA[    case 'users':
+      include("$ADMIN_PATH/admin.users.tools.php");
+      $tpl->set("main_content",set_block($block_title,"center",$admintpl->fetch(load_template("admin.users.tools.tpl"))));
+      break;]]></search>
+			<action>"add"</action>
+			<data><![CDATA[    case 'lottery_settings':
+      include("$ADMIN_PATH/admin.lottery.php");
+      $tpl->set("main_content",set_block($language["LOTT_SETTINGS"],"center",$admintpl->fetch(load_template("admin.lottery.tpl"))));
+      break;
+
+    case 'view_selled_tickets':
+      include("$ADMIN_PATH/admin.view_tickets.php");
+      $tpl->set("main_content",set_block($language["ACP_SELLED_TICKETS"],"center",$admintpl->fetch(load_template("admin.view_tickets.tpl"))));
+      break;]]></data>
+			<where>"after"</where>
+		</operation>
+	</file>
+
+	<file>
+		<name>"$DEFAULT_ROOT/index.php"</name>
+		<operation>
+			<search><![CDATA[    case 'viewnews':
+        require("$THIS_BASEPATH/viewnews.php");
+        $tpl->set("main_content",set_block($language["LAST_NEWS"],"center",$viewnewstpl->fetch(load_template("viewnews.tpl"))));
+        $tpl->set("main_title",$btit_settings["name"]." .::. "."Index->News");
+        break;]]></search>
+			<action>"add"</action>
+			<data><![CDATA[    case 'lottery_tickets':
+        require("$THIS_BASEPATH/lottery.tickets.php");
+        $tpl->set("main_content",set_block($language["LOTTERY"],"center",$ticketstpl->fetch(load_template("lottery.tickets.tpl"))));
+        $tpl->set("main_title",$btit_settings["name"]." .::. "."Index->".$language["LOTTERY"]."");
+        break;
+
+    case 'lottery_winners':
+        require("$THIS_BASEPATH/lottery.winners.php");
+        $tpl->set("main_content",set_block($language["LOTTERY"],"center",$ticketstpl->fetch(load_template("lottery.winners.tpl"))));
+        $tpl->set("main_title",$btit_settings["name"]." .::. "."Index->".$language["LOTTERY"]."");
+        break;
+
+    case 'lottery_purchase':
+        require("$THIS_BASEPATH/lottery.purchase.php");
+        $tpl->set("main_content",set_block($language["LOTTERY"],"center",$ticketstpl->fetch(load_template("lottery.purchase.tpl"))));
+        $tpl->set("main_title",$btit_settings["name"]." .::. "."Index->".$language["LOTTERY"]."");
+        break;]]></data>
+			<where>"after"</where>
+		</operation>
+	</file>
+
+	<file>
+		<name>"$DEFAULT_ROOT/blocks/menu_block.php"</name>
+		<operation>
+			<search><![CDATA[      print("<tr><td class=\"blocklist\" align=\"center\"><a href=\"index.php?page=extra-stats\">".$language["MNU_STATS"]."</a></td></tr>\n");]]></search>
+			<action>"add"</action>
+			<data><![CDATA[      print("<tr><td class=\"blocklist\" align=\"center\"><a href=\"index.php?page=lottery_tickets\">".$language["LOTTERY"]."</a></td></tr>\n");]]></data>
+			<where>"after"</where>
+		</operation>
+	</file>
+
+	<file>
+		<name>"$DEFAULT_ROOT/include/sanity.php"</name>
+		<operation>
+			<search><![CDATA[         // SANITY FOR TORRENTS
+         $results = do_sqlquery("SELECT info_hash, seeds, leechers, dlbytes, filename FROM {$TABLE_PREFIX}files WHERE external='no'");
+         $i = 0;
+         while ($row = mysql_fetch_row($results))
+         {
+             list($hash, $seeders, $leechers, $bytes, $filename) = $row;
+
+         $timeout=time()-(intval($GLOBALS["report_interval"]*2));]]></search>
+			<action>"add"</action>
+			<data><![CDATA[$query = do_sqlquery("SELECT * FROM `{$TABLE_PREFIX}lottery_config` WHERE `id`=1", true);
+$config = mysql_fetch_array($query);
+$expire_date = $config['lot_expire_date'];
+$expire = strtotime ($expire_date);
+$now = strtotime("now");
+if ($now >= $expire )
+{
+	$number_winners = $config['lot_number_winners'];
+	$number_to_win = $config['lot_number_to_win'];
+	$minupload = $config['lot_amount'];
+	$res = do_sqlquery("SELECT `id`, `user` FROM `{$TABLE_PREFIX}lottery_tickets` ORDER BY RAND(NOW()) LIMIT ".$number_winners."", true); //select number of winners
+	$total = mysql_num_rows(do_sqlquery("SELECT * FROM `{$TABLE_PREFIX}lottery_tickets`", true)); //select total selled tickets
+	$pot = $total * $minupload; //selled tickets * ticket price
+	$pot += $number_to_win; // ticket price + minimum win
+	$win = ($pot/$number_winners); // price for each winner
+	$subject = "You have won a price with the lottery"; //subject in pm
+	$msg = "Congratulations you have won a price with our Lottery. Your price has been added to your account. You won ".makesize($win).""; //next 3 rows are the msg for PM
+	$sender = $config['sender_id']; // Sender id, in my case 0
+	
+	//print the winners and send them PM en give them price
+	while($row=mysql_fetch_array($res)){
+	
+		$ras = do_sqlquery("SELECT `smf_fid`, `id`, `username` FROM `{$TABLE_PREFIX}users` WHERE `id`=".$row['user']."", true);
+		$raw = mysql_fetch_array($ras);
+		$rec = $raw['id'];
+		do_sqlquery("UPDATE `{$TABLE_PREFIX}users` SET `uploaded`=uploaded+".$win." WHERE `id`=".$row['user']."", true);
+		$smf = mysql_fetch_assoc(do_sqlquery("SELECT smf_fid, username FROM `{$TABLE_PREFIX}users` WHERE `id`=".$row["user"]."", true));
+
+		if($FORUMLINK=="smf")
+        {
+			do_sqlquery("INSERT INTO {$db_prefix}personal_messages (ID_MEMBER_FROM, fromName, msgtime, subject, body) VALUES (".$smf["smf_fid"].", '".$smf["username"]."', UNIX_TIMESTAMP(), '$subject', '$msg')", true);
+			$pm_id=mysql_insert_id();
+			do_sqlquery("INSERT INTO {$db_prefix}pm_recipients (ID_PM, ID_MEMBER) VALUES ($pm_id, ".$smf["smf_fid"].")", true);
+			do_sqlquery("UPDATE {$db_prefix}members SET instantMessages=instantMessages+1, unreadMessages=unreadMessages+1 WHERE ID_MEMBER=".$smf["smf_fid"]."", true);
+		}
+		else
+			do_sqlquery("INSERT INTO `{$TABLE_PREFIX}messages` (`sender`, `receiver`, `added`, `subject`, `msg`) VALUES ($sender, $rec, UNIX_TIMESTAMP(), '".$subject."',  '".$msg."')", true);
+
+		do_sqlquery("INSERT INTO `{$TABLE_PREFIX}lottery_winners` (`id`, `win_user`, `windate`, `price`) VALUES ('', '".$raw['username']."', '".$expire_date."', '".$win."')"); 
+	}
+	do_sqlquery("TRUNCATE TABLE `{$TABLE_PREFIX}lottery_tickets`", true);
+	do_sqlquery("UPDATE `{$TABLE_PREFIX}lottery_config` SET `lot_status`='closed' WHERE `id`=1", true);
+}]]></data>
+			<where>"before"</where>
+		</operation>
+	</file>
+
+	<file>
+		<name>"$CURRENT_FOLDER/toCopy/data-file.admin.php"</name>
+		<operation>
+			<action>"copy"</action>
+			<data>"admin.lottery.php"</data>
+			<where>"$DEFAULT_ROOT/admin"</where>
+		</operation>
+	</file>
+
+	<file>
+		<name>"$CURRENT_FOLDER/toCopy/template-file.admin.tpl"</name>
+		<operation>
+			<action>"copy"</action>
+			<data>"admin.lottery.tpl"</data>
+			<where>"$DEFAULT_STYLE_PATH"</where>
+		</operation>
+	</file>
+
+	<file>
+		<name>"$CURRENT_FOLDER/toCopy/data-file.purchase.php"</name>
+		<operation>
+			<action>"copy"</action>
+			<data>"lottery.purchase.php"</data>
+			<where>"$DEFAULT_ROOT"</where>
+		</operation>
+	</file>
+
+	<file>
+		<name>"$CURRENT_FOLDER/toCopy/template-file.purchase.tpl"</name>
+		<operation>
+			<action>"copy"</action>
+			<data>"lottery.purchase.tpl"</data>
+			<where>"$DEFAULT_STYLE_PATH"</where>
+		</operation>
+	</file>
+
+	<file>
+		<name>"$CURRENT_FOLDER/toCopy/data-file.tickets.php"</name>
+		<operation>
+			<action>"copy"</action>
+			<data>"lottery.tickets.php"</data>
+			<where>"$DEFAULT_ROOT"</where>
+		</operation>
+	</file>
+
+	<file>
+		<name>"$CURRENT_FOLDER/toCopy/template-file.tickets.tpl"</name>
+		<operation>
+			<action>"copy"</action>
+			<data>"lottery.tickets.tpl"</data>
+			<where>"$DEFAULT_STYLE_PATH"</where>
+		</operation>
+	</file>
+
+	<file>
+		<name>"$CURRENT_FOLDER/toCopy/data-file.view_tickets.php"</name>
+		<operation>
+			<action>"copy"</action>
+			<data>"admin.view_tickets.php"</data>
+			<where>"$DEFAULT_ROOT/admin"</where>
+		</operation>
+	</file>
+
+	<file>
+		<name>"$CURRENT_FOLDER/toCopy/template-file.view_tickets.tpl"</name>
+		<operation>
+			<action>"copy"</action>
+			<data>"admin.view_tickets.tpl"</data>
+			<where>"$DEFAULT_STYLE_PATH"</where>
+		</operation>
+	</file>
+
+	<file>
+		<name>"$CURRENT_FOLDER/toCopy/data-file.view_winners.php"</name>
+		<operation>
+			<action>"copy"</action>
+			<data>"lottery.winners.php"</data>
+			<where>"$DEFAULT_ROOT"</where>
+		</operation>
+	</file>
+
+	<file>
+		<name>"$CURRENT_FOLDER/toCopy/template-file.view_winners.tpl"</name>
+		<operation>
+			<action>"copy"</action>
+			<data>"lottery.winners.tpl"</data>
+			<where>"$DEFAULT_STYLE_PATH"</where>
+		</operation>
+	</file>
+
+	<file>
+		<name>"$CURRENT_FOLDER/toCopy/language-file.php"</name>
+		<operation>
+			<action>"copy"</action>
+			<data>"lang_lottery.php"</data>
+			<where>"$DEFAULT_LANGUAGE_PATH"</where>
+		</operation>
+	</file>
+
+	<file>
+		<name>"$CURRENT_FOLDER/toCopy/block-file.php"</name>
+		<operation>
+			<action>"copy"</action>
+			<data>"lottery_block.php"</data>
+			<where>"$DEFAULT_ROOT/blocks"</where>
+		</operation>
+	</file>
+
+</hack>

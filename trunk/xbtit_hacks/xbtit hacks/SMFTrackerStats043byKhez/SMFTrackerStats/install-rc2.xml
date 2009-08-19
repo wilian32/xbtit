@@ -1,0 +1,318 @@
+<?xml version="1.0"?>
+<!DOCTYPE modification SYSTEM "http://www.simplemachines.org/xml/modification">
+<!-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+	ATTENTION: If you are trying to install this manually, you should try
+	the package manager.  If it will not work for you, please take a look
+	at the following for information on this format:
+		http://mods.simplemachines.org/docs/manual-install.php
+
+================================================================================
+
+	Modification files can be used to modify files so that they do what
+	your package needs them to do to work properly.
+
+ - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -->
+
+<modification xmlns="http://www.simplemachines.org/xml/modification" xmlns:smf="http://www.simplemachines.org/">
+	<!-- This information needs to be the same as that in the package-info.xml. -->
+	<id>Khez:SMFTrackerStats</id>
+	<version>0.4</version>
+  <!-- Add Stats to Post Author Info on default -->
+  <file name="$themes_dir/default/Display.template.php">
+    <!-- Save XBTT_USE -->
+    <operation>
+      <search position="before"><![CDATA[global]]></search>
+      <add><![CDATA[ $XBTT_USE, $TABLE_PREFIX,]]></add>
+{]]></search>
+    </operation>
+		<!-- Show Stats -->
+		<operation>
+      <search position="before"><![CDATA[// Show how many posts they have made.
+			echo '
+								', $txt[26], ': ', $message['member']['posts'], '<br />
+								<br />';]]></search>
+      <add><![CDATA[
+			if ( ($modSettings['trackerEnabled']==1) ) {
+				if (!isset($XBTT_USE)) {
+					// get table_prefix
+					$TABLE_PREFIX=mysql_query('SHOW TABLES LIKE "%hacks";');
+					$TABLE_PREFIX=mysql_fetch_array($TABLE_PREFIX);
+					$TABLE_PREFIX=substr($TABLE_PREFIX[0],0, -5);
+					// get xbtt_use
+					$XBTT_USE=mysql_query("SELECT `value` FROM {$TABLE_PREFIX}settings WHERE `key`='xbtt_use' LIMIT 1;");
+					$XBTT_USE=mysql_fetch_array();
+					$XBTT_USE=($XBTT_USE['value']=='true');
+				}
+				if ($XBTT_USE) {
+					$udownloaded="u.downloaded+IFNULL(x.downloaded,0)";
+					$uuploaded="u.uploaded+IFNULL(x.uploaded,0)";
+					$utables="{$TABLE_PREFIX}users u LEFT JOIN xbt_users x ON x.uid=u.id";
+				}	else {
+					$udownloaded="u.downloaded";
+					$uuploaded="u.uploaded";
+					$utables="{$TABLE_PREFIX}users u";
+				}
+				$resuser=mysql_query("SELECT $udownloaded as downloaded,$uuploaded as uploaded FROM $utables WHERE u.smf_fid=".$message['member']['id'].' LIMIT 1;');
+				$rowuser= mysql_fetch_array($resuser);
+				echo '<span class="stats"><div class="tracker">'.$modSettings['trackerLabel'].'</div>';
+				echo '<div class="upload">'.$modSettings['trackerUpload'].'&nbsp;'.smf_makesize($rowuser['uploaded']).'</div>';
+				echo '<div class="download">'.$modSettings['trackerDownload'].'&nbsp;'.smf_makesize($rowuser['downloaded']).'</div>';
+				echo '<div class="ratio">('.$modSettings['trackerRatio'].'&nbsp;'.($rowuser['downloaded']>0?number_format($rowuser['uploaded']/$rowuser['downloaded'],2):'---').')</div>';
+				echo '</span>';
+    	}
+      ]]></add>
+		</operation>
+  </file>
+	<!-- Add Tracker/Upload/Download/Ratio vars to the CSS on default -->
+	<file name="$themes_dir/default/style.css">
+    <operation>
+      <search position="before"><![CDATA[}]]></search>
+      <add><![CDATA[
+.stats {
+  font-size: 1.1em;
+}
+.tracker {
+  color:#660033;
+}
+.upload {
+	color:#008000;
+}
+.download {
+	color:#FF0000;
+}
+.ratio {
+	color:#800080;
+}
+			]]></add>
+    </operation>
+	</file>
+  <!-- Add Stats to Post Author Info on classic -->
+  <file name="$themes_dir/classic/Display.template.php">
+    <!-- Save XBTT_USE -->
+    <operation>
+      <search position="before"><![CDATA[global]]></search>
+      <add><![CDATA[ $XBTT_USE, $TABLE_PREFIX,]]></add>
+{]]></search>
+    </operation>
+		<!-- Show Stats -->
+		<operation>
+      <search position="before"><![CDATA[// Show how many posts they have made.
+			echo '
+								', $txt[26], ': ', $message['member']['posts'], '<br />
+								<br />';]]></search>
+      <add><![CDATA[
+			if ( ($modSettings['trackerEnabled']==1) ) {
+				if (!isset($XBTT_USE)) {
+					// get table_prefix
+					$TABLE_PREFIX=mysql_query('SHOW TABLES LIKE "%hacks";');
+					$TABLE_PREFIX=mysql_fetch_array($TABLE_PREFIX);
+					$TABLE_PREFIX=substr($TABLE_PREFIX[0],0, -5);
+					// get xbtt_use
+					$XBTT_USE=mysql_query("SELECT `value` FROM {$TABLE_PREFIX}settings WHERE `key`='xbtt_use' LIMIT 1;");
+					$XBTT_USE=mysql_fetch_array();
+					$XBTT_USE=($XBTT_USE['value']=='true');
+				}
+				if ($XBTT_USE) {
+					$udownloaded="u.downloaded+IFNULL(x.downloaded,0)";
+					$uuploaded="u.uploaded+IFNULL(x.uploaded,0)";
+					$utables="{$TABLE_PREFIX}users u LEFT JOIN xbt_users x ON x.uid=u.id";
+				}	else {
+					$udownloaded="u.downloaded";
+					$uuploaded="u.uploaded";
+					$utables="{$TABLE_PREFIX}users u";
+				}
+				$resuser=mysql_query("SELECT $udownloaded as downloaded,$uuploaded as uploaded FROM $utables WHERE u.smf_fid=".$message['member']['id'].' LIMIT 1;');
+				$rowuser= mysql_fetch_array($resuser);
+				echo '<span class="stats"><div class="tracker">'.$modSettings['trackerLabel'].'</div>';
+				echo '<div class="upload">'.$modSettings['trackerUpload'].'&nbsp;'.smf_makesize($rowuser['uploaded']).'</div>';
+				echo '<div class="download">'.$modSettings['trackerDownload'].'&nbsp;'.smf_makesize($rowuser['downloaded']).'</div>';
+				echo '<div class="ratio">('.$modSettings['trackerRatio'].'&nbsp;'.($rowuser['downloaded']>0?number_format($rowuser['uploaded']/$rowuser['downloaded'],2):'---').')</div>';
+				echo '</span>';
+    	}
+      ]]></add>
+		</operation>
+  </file>
+	<!-- Add tracker/Upload/Download/Ratio vars to the CSS on default -->
+	<file name="$themes_dir/classic/style.css">
+    <operation>
+      <search position="before"><![CDATA[}]]></search>
+      <add><![CDATA[
+.stats {
+  font-size: 1.1em;
+}
+.tracker {
+  color:#660033;
+}
+.upload {
+	color:#008000;
+}
+.download {
+	color:#FF0000;
+}
+.ratio {
+	color:#800080;
+}
+			]]></add>
+    </operation>
+	</file>
+  <!-- Add Stats to Post Author Info on babylon -->
+  <file name="$themes_dir/babylon/Display.template.php">
+    <!-- Save XBTT_USE -->
+    <operation>
+      <search position="before"><![CDATA[global]]></search>
+      <add><![CDATA[ $XBTT_USE, $TABLE_PREFIX,]]></add>
+{]]></search>
+    </operation>
+		<!-- Show Stats -->
+		<operation>
+      <search position="before"><![CDATA[// Show how many posts they have made.
+			echo '
+								', $txt[26], ': ', $message['member']['posts'], '<br />
+								<br />';]]></search>
+      <add><![CDATA[
+			if ( ($modSettings['trackerEnabled']==1) ) {
+				if (!isset($XBTT_USE)) {
+					// get table_prefix
+					$TABLE_PREFIX=mysql_query('SHOW TABLES LIKE "%hacks";');
+					$TABLE_PREFIX=mysql_fetch_array($TABLE_PREFIX);
+					$TABLE_PREFIX=substr($TABLE_PREFIX[0],0, -5);
+					// get xbtt_use
+					$XBTT_USE=mysql_query("SELECT `value` FROM {$TABLE_PREFIX}settings WHERE `key`='xbtt_use' LIMIT 1;");
+					$XBTT_USE=mysql_fetch_array();
+					$XBTT_USE=($XBTT_USE['value']=='true');
+				}
+				if ($XBTT_USE) {
+					$udownloaded="u.downloaded+IFNULL(x.downloaded,0)";
+					$uuploaded="u.uploaded+IFNULL(x.uploaded,0)";
+					$utables="{$TABLE_PREFIX}users u LEFT JOIN xbt_users x ON x.uid=u.id";
+				}	else {
+					$udownloaded="u.downloaded";
+					$uuploaded="u.uploaded";
+					$utables="{$TABLE_PREFIX}users u";
+				}
+				$resuser=mysql_query("SELECT $udownloaded as downloaded,$uuploaded as uploaded FROM $utables WHERE u.smf_fid=".$message['member']['id'].' LIMIT 1;');
+				$rowuser= mysql_fetch_array($resuser);
+				echo '<span class="stats"><div class="tracker">'.$modSettings['trackerLabel'].'</div>';
+				echo '<div class="upload">'.$modSettings['trackerUpload'].'&nbsp;'.smf_makesize($rowuser['uploaded']).'</div>';
+				echo '<div class="download">'.$modSettings['trackerDownload'].'&nbsp;'.smf_makesize($rowuser['downloaded']).'</div>';
+				echo '<div class="ratio">('.$modSettings['trackerRatio'].'&nbsp;'.($rowuser['downloaded']>0?number_format($rowuser['uploaded']/$rowuser['downloaded'],2):'---').')</div>';
+				echo '</span>';
+    	}
+      ]]></add>
+		</operation>
+  </file>
+	<!-- Add tracker/Upload/Download/Ratio vars to the CSS on default -->
+	<file name="$themes_dir/babylon/style.css">
+    <operation>
+      <search position="before"><![CDATA[}]]></search>
+      <add><![CDATA[
+.stats {
+  font-size: 1.1em;
+}
+.tracker {
+  color:#660033;
+}
+.upload {
+	color:#008000;
+}
+.download {
+	color:#FF0000;
+}
+.ratio {
+	color:#800080;
+}
+			]]></add>
+    </operation>
+	</file>
+  <!-- Add smf_makesize Function -->
+	<file name="$sourcedir/Display.php">
+		<operation>
+      <search position="after"><![CDATA[// The central part of the board - topic display.]]></search>
+      <add><![CDATA[
+function smf_makesize($bytes) {
+  if (abs($bytes) < 1024000)
+    return number_format($bytes / 1024, 2).' KB';
+  if (abs($bytes) < 1048576000)
+    return number_format($bytes / 1048576, 2).' MB';
+  if (abs($bytes) < 1073741824000)
+    return number_format($bytes / 1073741824, 2).' GB';
+  return number_format($bytes / 1099511627776, 2).' TB';
+}
+			]]></add>
+		</operation>
+	</file>
+	<!-- Add Admin tracker Tab -->
+  <file name="$sourcedir/ModSettings.php">
+		<!-- Add Mod Loading -->
+    <operation>
+      <search position="before"><![CDATA['karma' => 'ModifyKarmaSettings',]]></search>
+      <add><![CDATA[
+    'tracker' => 'ModifytrackerSettings',
+      ]]></add>
+		</operation>
+    <!-- Add Tab -->
+	  <operation>
+      <search position="after"><![CDATA[		),
+	);]]></search>
+      <add><![CDATA[
+      'tracker' => array(
+        'title' => $txt['trackerStats_title'],
+        'href' => $scripturl . '?action=featuresettings;sa=tracker;sesc=' . $context['session_id'],
+        'is_last' => true,
+      ),
+      ]]></add>
+    </operation>
+    <!-- Add Mod Function -->
+    <operation>
+      <search position="after"><![CDATA[?>]]></search>
+      <add><![CDATA[
+function ModifytrackerSettings() {
+	global $txt, $scripturl, $context, $settings, $sc;
+
+	$config_vars = array(
+    // Stats On/Off
+    array('check', 'trackerEnabled'),
+//		array('select', 'trackerMode', explode('|', $txt['trackerMode_info'])),
+    '',
+    // What does it look like?
+    array('text', 'trackerLabel'),
+    array('text', 'trackerUpload'),
+    array('text', 'trackerDownload'),
+		array('text', 'trackerRatio'),
+  );
+
+  // Saving?
+	if (isset($_GET['save'])) {
+    saveDBSettings($config_vars);
+    redirectexit('action=featuresettings;sa=tracker;sesc='.$context['session_id']);
+	}
+
+	$context['post_url'] = $scripturl . '?action=featuresettings;save;sa=tracker;sesc='.$context['session_id'];
+	$context['settings_title'] = $txt['trackerStats_title'];
+
+	prepareDBSettingContext($config_vars);
+}
+      ]]></add>
+		</operation>
+  </file>
+  <!-- Language Packs -->
+	<!-- English -->
+  <file name="$themes_dir/default/languages/Modifications.english.php">
+    <operation>
+      <search position="after"><![CDATA[?>]]></search>
+      <add><![CDATA[
+// Admin Tabs
+$txt['trackerStats_title'] = 'Tracker Stats';
+$txt['trackerStats_info'] = 'Customize your tracker stats profile info.';
+// Admin Config
+$txt['trackerEnabled'] = 'Enabled:';
+$txt['trackerMinPosts'] = 'Minimum posts needed to see stats:';
+$txt['trackerLabel'] = 'Tracker Label:';
+$txt['trackerUpload'] = 'Tracker Upload:';
+$txt['trackerDownload'] = 'Tracker Download:';
+$txt['trackerRatio'] = 'Tracker Ratio:';
+      ]]></add>
+		</operation>
+	</file>
+</modification>

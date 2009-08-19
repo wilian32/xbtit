@@ -1,0 +1,122 @@
+<hack>
+  <title>Show members whois record on userdetails.php</title>
+  <author>Petr1fied</author>
+  <version>1.0</version>
+  <file>
+    <name>"$DEFAULT_ROOT/whois/whois.ip.lib.php"</name>
+    <operation>
+      <search><![CDATA[// Check if ip adddress is valid]]></search>
+      <action>"add"</action>
+      <where>"after"</where>
+      <data><![CDATA[/*]]></data>
+    </operation>
+    <operation>
+      <search><![CDATA[//-----------------------------------------------------------------
+// Get real client ip address]]></search>
+      <action>"replace"</action>
+      <data><![CDATA[*/
+
+//-----------------------------------------------------------------
+// Get real client ip address]]></data>
+    </operation>
+  </file>
+  <file>
+    <name>"$DEFAULT_ROOT/style/xbtit_default/userdetails.tpl"</name>
+    <operation>
+      <search><![CDATA[    <td class="lista"><tag:userdetail_last_ip /></td>
+
+  </tr>
+]]></search>
+      <action>"add"</action>
+      <where>"after"</where>
+      <data><![CDATA[  <tr>
+
+    <td class="header"><tag:language.WHOIS /></td>
+
+    <td class="lista"><tag:userdetail_whois /></td>
+
+  </tr>
+]]></data>
+    </operation>
+  </file>
+  <file>
+    <name>"$DEFAULT_ROOT/userdetails.php"</name>
+    <operation>
+      <search><![CDATA[$userdetailtpl -> set("userdetail_last_ip", ($row["cip"]));]]></search>
+      <action>"add"</action>
+      <where>"after"</where>
+      <data><![CDATA[// Start - Whois check by Petr1fied
+
+include_once("whois/whois.main.php");
+
+$whois = new Whois();
+$result = $whois->Lookup($row["cip"]);
+$output="<pre>";
+$i=0;
+while ($i<count($result["rawdata"]))
+{
+    $i++;
+    $output.=$result["rawdata"][$i]."<br />";
+}
+$output.="</pre>";
+
+$userdetailtpl -> set("userdetail_whois", ($output));
+
+// End - Whois check by Petr1fied]]></data>
+    </operation>
+  </file>
+  <file>
+    <name>"$DEFAULT_ROOT/language/dutch/lang_userdetails.php"</name>
+    <operation>
+      <search><![CDATA[$language["NO_HISTORY"]         = "Geen geschiedenis om te laten zien...";]]></search>
+      <action>"add"</action>
+      <where>"after"</where>
+      <data><![CDATA[$language["WHOIS"]              = "Whois";]]></data>
+    </operation>
+  </file>
+  <file>
+    <name>"$DEFAULT_ROOT/language/english/lang_userdetails.php"</name>
+    <operation>
+      <search><![CDATA[$language["NO_HISTORY"]         = "No history to display...";]]></search>
+      <action>"add"</action>
+      <where>"after"</where>
+      <data><![CDATA[$language["WHOIS"]              = "Whois";]]></data>
+    </operation>
+  </file>
+  <file>
+    <name>"$DEFAULT_ROOT/language/italian/lang_userdetails.php"</name>
+    <operation>
+      <search><![CDATA[$language["NO_HISTORY"]         = "Nessuna cronologia da visualizzare...";]]></search>
+      <action>"add"</action>
+      <where>"after"</where>
+      <data><![CDATA[$language["WHOIS"]              = "Whois";]]></data>
+    </operation>
+  </file>
+  <file>
+    <name>"$DEFAULT_ROOT/language/polish/lang_userdetails.php"</name>
+    <operation>
+      <search><![CDATA[$language["NO_HISTORY"]         = "Brak historii do wyświetlenia...";]]></search>
+      <action>"add"</action>
+      <where>"after"</where>
+      <data><![CDATA[$language["WHOIS"]              = "Whois";]]></data>
+    </operation>
+  </file>
+  <file>
+    <name>"$DEFAULT_ROOT/language/romanian/lang_userdetails.php"</name>
+    <operation>
+      <search><![CDATA[$language["NO_HISTORY"]="Nu exista istorie...";]]></search>
+      <action>"add"</action>
+      <where>"after"</where>
+      <data><![CDATA[$language["WHOIS"]              = "Whois";]]></data>
+    </operation>
+  </file>
+  <file>
+    <name>"$DEFAULT_ROOT/language/serbocroatian/lang_userdetails.php"</name>
+    <operation>
+      <search><![CDATA[$language["NO_HISTORY"]         = "Nema download istorije...";]]></search>
+      <action>"add"</action>
+      <where>"after"</where>
+      <data><![CDATA[$language["WHOIS"]              = "Whois";]]></data>
+    </operation>
+  </file>
+</hack>

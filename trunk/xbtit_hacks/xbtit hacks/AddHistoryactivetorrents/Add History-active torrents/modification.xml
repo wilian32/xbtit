@@ -1,0 +1,352 @@
+<hack>
+  <title>Add History/Active Torrents to User CP</title>
+  <author>mcangeli</author>
+  <version>1.2</version>
+  <!-- language/english/lang_blocks.php -->
+  <file>
+    <name>"$DEFAULT_LANGUAGE_PATH/lang_usercp.php"</name>
+    <operation>
+      <search><![CDATA[?>]]></search>
+      <action>"add"</action>
+      <data><![CDATA[ $language["ACTIVE_TORRENT"]     = "Active Torrents";
+]]></data>
+      <where>"before"</where>
+    </operation>
+  </file>
+  
+
+<!-- user/usercp.main.php -->
+  <file>
+    <name>"$DEFAULT_ROOT/user/usercp.main.php"</name>
+    <operation>
+    <search><![CDATA[$res=do_sqlquery("SELECT u.lip,u.username,]]></search>
+    <action>"replace"</action>
+    <data><![CDATA[$res=do_sqlquery("SELECT u.lip,u.username, u.pid, u.cip, ]]></data>
+    </operation>
+    <operation>
+      <search><![CDATA[?>]]></search>
+      <action>"add"</action>
+      <data><![CDATA[ //addition
+if ($XBTT_USE)
+   $anq=do_sqlquery("SELECT count(*) FROM xbt_files_users xfu WHERE active=1 AND uid=$uid");
+else
+{
+  if ($PRIVATE_ANNOUNCE)
+      $anq=do_sqlquery("SELECT count(*) FROM {$TABLE_PREFIX}peers p INNER JOIN {$TABLE_PREFIX}files f ON f.info_hash = p.infohash WHERE p.pid='".$row["pid"]."'",true);
+  else
+      $anq=do_sqlquery("SELECT count(*) FROM {$TABLE_PREFIX}peers p INNER JOIN {$TABLE_PREFIX}files f ON f.info_hash = p.infohash WHERE p.ip='".($row["cip"])."'",true);
+  }
+$sanq=mysql_fetch_row($anq);
+// active torrents
+if ($sanq[0]>0)
+   {
+   $usercptpl->set("RESULTS_1",true,true);
+   $tortpl=array();
+   $i=0;
+
+    list($pagertop, $pagerbottom, $limit) = pager(($utorrents==0?15:$utorrents), mysql_num_rows($anq), "index.php?page=usercps&amp;id=$id&amp;",array("pagename" => "activepage"));
+    if ($XBTT_USE)
+            $anq=do_sqlquery("SELECT '127.0.0.1' as ip, f.info_hash as infohash, f.filename, f.size, IF(p.left=0,'seeder','leecher') as status, p.downloaded, p.uploaded, $tseeds as seeds, $tleechs as leechers, $tcompletes as finished
+                        FROM xbt_files_users p INNER JOIN xbt_files x ON p.fid=x.fid INNER JOIN {$TABLE_PREFIX}files f ON f.bin_hash = x.info_hash
+                        WHERE p.uid=$uid AND p.active=1 ORDER BY status DESC $limit",true);
+    else
+      {
+        if ($PRIVATE_ANNOUNCE)
+            $anq=do_sqlquery("SELECT p.ip, p.infohash, f.filename, f.size, p.status, p.downloaded, p.uploaded, f.seeds, f.leechers, f.finished
+                        FROM {$TABLE_PREFIX}peers p INNER JOIN {$TABLE_PREFIX}files f ON f.info_hash = p.infohash
+                        WHERE p.pid='".$row["pid"]."' ORDER BY p.status DESC $limit",true);
+        else
+            $anq=do_sqlquery("SELECT p.ip, p.infohash, f.filename, f.size, p.status, p.downloaded, p.uploaded, f.seeds, f.leechers, f.finished
+                        FROM {$TABLE_PREFIX}peers p INNER JOIN {$TABLE_PREFIX}files f ON f.info_hash = p.infohash
+                        WHERE p.ip='".($row["cip"])."' ORDER BY p.status DESC $limit",true);
+     }
+//    print("<div align=\"center\">$pagertop</div>");
+
+    while ($torlist = mysql_fetch_object($anq))
+        {
+         if ($torlist->ip !="")
+           {
+             $torlist->filename=unesc($torlist->filename);
+             $filename=cut_string($torlist->filename,intval($btit_settings["cut_name"]));
+
+             if ($GLOBALS["usepopup"])
+             {
+                 $tortpl[$i]["filename"]="<a href=\"javascript:popdetails('index.php?page=torrent-details&amp;id=".$torlist->infohash."')\" title=\"".$language["VIEW_DETAILS"].": ".$torlist->filename."\">".$filename."</a>";
+                 $tortpl[$i]["size"]=makesize($torlist->size);
+                 $tortpl[$i]["status"]=unesc($torlist->status);
+                 $tortpl[$i]["downloaded"]=makesize($torlist->downloaded);
+                 $tortpl[$i]["uploaded"]=makesize($torlist->uploaded);
+                 if ($torlist->downloaded>0)
+                      $peerratio=number_format($torlist->uploaded/$torlist->downloaded,2);
+                 else
+                      $peerratio="oo";
+                 $tortpl[$i]["peerratio"]=unesc($peerratio);
+                 $tortpl[$i]["seedscolor"]=linkcolor($torlist->seeds);
+                 $tortpl[$i]["seeds"]="<a href=\"javascript:poppeer('index.php?page=peers&amp;id=".$torlist->infohash."')\">$torlist->seeds</a>";
+                 $tortpl[$i]["leechcolor"]=linkcolor($torlist->leechers);
+                 $tortpl[$i]["leechs"]="<a href=\"javascript:poppeer('index.php?page=peers&amp;id=".$torlist->infohash."')\">$torlist->leechers</a>";
+                 $tortpl[$i]["completed"]="<a href=\"javascript:poppeer('index.php?page=torrent_history.php&amp;id=".$torlist->infohash."')\">".$torlist->finished."</a>";
+                 $i++;
+                 $usercptpl->set("tortpl",$tortpl);
+             }
+             else
+             {
+                 $tortpl[$i]["filename"]="<a href=\"index.php?page=torrent-details&amp;id=".$torlist->infohash."\" title=\"".$language["VIEW_DETAILS"].": ".$torlist->filename."\">".$filename."</a>";
+                 $tortpl[$i]["size"]=makesize($torlist->size);
+                 $tortpl[$i]["status"]=unesc($torlist->status);
+                 $tortpl[$i]["downloaded"]=makesize($torlist->downloaded);
+                 $tortpl[$i]["uploaded"]=makesize($torlist->uploaded);
+                 if ($torlist->downloaded>0)
+                      $peerratio=number_format($torlist->uploaded/$torlist->downloaded,2);
+                 else
+                      $peerratio="oo";
+                 $tortpl[$i]["peerratio"]=unesc($peerratio);
+                 $tortpl[$i]["seedscolor"]=linkcolor($torlist->seeds);
+                 $tortpl[$i]["seeds"]="<a href=\"index.php?page=peers&amp;id=".$torlist->infohash."\">$torlist->seeds</a>";
+                 $tortpl[$i]["leechcolor"]=linkcolor($torlist->leechers);
+                 $tortpl[$i]["leechs"]="<a href=\"index.php?page=peers&amp;id=".$torlist->infohash."\">$torlist->leechers</a>";
+                 $tortpl[$i]["completed"]="<a href=\"index.php?page=torrent_history&amp;id=".$torlist->infohash."\">".$torlist->finished."</a>";
+                 $i++;
+                 $usercptpl->set("tortpl",$tortpl);
+            }
+         }
+        }
+   } else $usercptpl->set("RESULTS_1",false,true);
+unset($sanq);
+
+mysql_free_result($anq);
+if ($XBTT_USE)
+   $anq=do_sqlquery("SELECT count(h.fid) FROM xbt_files_users h INNER JOIN xbt_files f ON h.fid=f.fid WHERE h.uid=$uid AND h.completed='1'",true);
+else
+    $anq=do_sqlquery("SELECT count(h.infohash) FROM {$TABLE_PREFIX}history h INNER JOIN {$TABLE_PREFIX}files f ON h.infohash=f.info_hash WHERE h.uid=$uid AND h.date IS NOT NULL",true);
+$sanq=mysql_fetch_row($anq);
+
+if ($sanq[0]>0)
+   {
+    $usercptpl->set("RESULTS_2",true,true);
+    $torhistory=array();
+    $i=0;
+    list($pagertop, $pagerbottom, $limit) = pager(($utorrents==0?15:$utorrents), mysql_num_rows($anq), "index.php?page=usercps&amp;id=$id&amp;",array("pagename" => "historypage"));
+    if ($XBTT_USE)
+       $anq=do_sqlquery("SELECT f.filename, f.size, f.info_hash, IF(h.active=1,'yes','no'), 'unknown' as agent, h.downloaded, h.uploaded, $tseeds as seeds, $tleechs as leechers, $tcompletes as finished
+       FROM $ttables INNER JOIN xbt_files_users h ON h.fid=x.fid WHERE h.uid=$uid AND h.completed=1 ORDER BY h.mtime DESC $limit",true);
+    else
+      $anq=do_sqlquery("SELECT f.filename, f.size, f.info_hash, h.active, h.agent, h.downloaded, h.uploaded, $tseeds as seeds, $tleechs as leechers, $tcompletes as finished
+      FROM $ttables INNER JOIN {$TABLE_PREFIX}history h ON h.infohash=f.info_hash WHERE h.uid=$uid AND h.date IS NOT NULL ORDER BY date DESC $limit",true);
+//    print("<div align=\"center\">$pagertop</div>");
+    while ($torlist = mysql_fetch_object($anq))
+        {
+            $torlist->filename=unesc($torlist->filename);
+            $filename=cut_string($torlist->filename,intval($btit_settings["cut_name"]));
+
+            if ($GLOBALS["usepopup"])
+            {
+                $torhistory[$i]["filename"]="<a href=\"javascript:popdetails('index.php?page=torrent-details&amp;id=".$torlist->info_hash."')\" title=\"".$language["VIEW_DETAILS"].": ".$torlist->filename."\">".$filename."</a>";
+                $torhistory[$i]["size"]=makesize($torlist->size);
+                $torhistory[$i]["agent"]=htmlspecialchars($torlist->agent);
+                $torhistory[$i]["status"]=($torlist->active=='yes'?$language["ACTIVATED"]:'Stopped');
+                $torhistory[$i]["downloaded"]=makesize($torlist->downloaded);
+                $torhistory[$i]["uploaded"]=makesize($torlist->uploaded);
+                if ($torlist->downloaded>0)
+                     $peerratio=number_format($torlist->uploaded/$torlist->downloaded,2);
+                else
+                     $peerratio="oo";
+                $torhistory[$i]["ratio"]=unesc($peerratio);
+                $torhistory[$i]["seedscolor"]=linkcolor($torlist->seeds);
+                $torhistory[$i]["seeds"]="<a href=\"javascript:poppeer('index.php?page=peers&amp;id=".$torlist->info_hash."')\">$torlist->seeds</a>";
+                $torhistory[$i]["leechcolor"]=linkcolor($torlist->leechers);
+                $torhistory[$i]["leechs"]="<a href=\"javascript:poppeer('index.php?page=peers&amp;id=".$torlist->info_hash."')\">$torlist->leechers</a>";
+                $torhistory[$i]["completed"]="<a href=\"javascript:poppeer('index.php?page=torrent_history&amp;id=".$torlist->info_hash."')\">".$torlist->finished."</a>";
+                $i++;
+                $usercptpl->set("torhistory",$torhistory);
+            }
+            else
+            {
+                $torhistory[$i]["filename"]="<a href=\"index.php?page=torrent-details&amp;id=".$torlist->info_hash."\" title=\"".$language["VIEW_DETAILS"].": ".$torlist->filename."\">".$filename."</a>";
+                $torhistory[$i]["size"]=makesize($torlist->size);
+                $torhistory[$i]["agent"]=htmlspecialchars($torlist->agent);
+                $torhistory[$i]["status"]=($torlist->active=='yes'?$language["ACTIVATED"]:'Stopped');
+                $torhistory[$i]["downloaded"]=makesize($torlist->downloaded);
+                $torhistory[$i]["uploaded"]=makesize($torlist->uploaded);
+                if ($torlist->downloaded>0)
+                     $peerratio=number_format($torlist->uploaded/$torlist->downloaded,2);
+                else
+                     $peerratio="oo";
+                $torhistory[$i]["ratio"]=unesc($peerratio);
+                $torhistory[$i]["seedscolor"]=linkcolor($torlist->seeds);
+                $torhistory[$i]["seeds"]="<a href=\"index.php?page=peers&amp;id=".$torlist->info_hash."\">$torlist->seeds</a>";
+                $torhistory[$i]["leechcolor"]=linkcolor($torlist->leechers);
+                $torhistory[$i]["leechs"]="<a href=\"index.php?page=peers&amp;id=".$torlist->info_hash."\">$torlist->leechers</a>";
+                $torhistory[$i]["completed"]="<a href=\"index.php?page=torrent_history&amp;id=".$torlist->info_hash."\">".$torlist->finished."</a>";
+                $i++;
+                $usercptpl->set("torhistory",$torhistory);
+            }
+        }
+   } else $usercptpl->set("RESULTS_2",false,true);
+]]></data>
+      <where>"before"</where>
+    </operation>
+  </file>
+
+<!-- style/xbtit_default/usercp.main.tpl -->
+  <file>
+    <name>"$DEFAULT_STYLE_PATH/usercp.main.tpl"</name>
+    <operation>
+      <search><![CDATA[
+</if:RESULTS>
+</table>]]></search>
+      <action>"add"</action>
+      <data><![CDATA[
+<br />
+
+<table width="100%" class="lista">
+
+  <tr>
+
+    <td class="block" align="center" colspan="9"><b><tag:language.ACTIVE_TORRENT /></b></td>
+
+  </tr>
+
+  <tr>
+
+    <td align="center" class="header"><tag:language.FILE /></td>
+
+    <td align="center" class="header"><tag:language.SIZE /></td>
+
+    <td align="center" class="header"><tag:language.PEER_STATUS /></td>
+
+    <td align="center" class="header"><tag:language.DOWNLOADED /></td>
+
+    <td align="center" class="header"><tag:language.UPLOADED /></td>
+
+    <td align="center" class="header"><tag:language.RATIO /></td>
+
+    <td align="center" class="header"><tag:language.SHORT_S /></td>
+
+    <td align="center" class="header"><tag:language.SHORT_L /></td>
+
+    <td align="center" class="header"><tag:language.SHORT_C /></td>
+
+  </tr>
+
+<if:RESULTS_1>
+
+  <loop:tortpl>
+
+  <tr>
+
+    <td align="center" class="lista" style="padding-left:10px;"><tag:tortpl[].filename /></td>
+
+    <td align="center" class="lista" style="text-align: center;"><tag:tortpl[].size /></td>
+
+    <td align="center" class="lista" style="text-align: center;"><tag:tortpl[].status /></td>
+
+    <td align="center" class="lista" style="text-align: center;"><tag:tortpl[].downloaded /></td>
+
+    <td align="center" class="lista" style="text-align: center;"><tag:tortpl[].uploaded /></td>
+
+    <td align="center" class="lista" style="text-align: center;"><tag:tortpl[].peerratio /></td>
+
+    <td align="center" class="<tag:tortpl[].seedscolor />" style="text-align: center;"><tag:tortpl[].seeds /></td>
+
+    <td align="center" class="<tag:tortpl[].leechcolor />" style="text-align: center;"><tag:tortpl[].leechs /></td>
+
+    <td align="center" class="lista" style="text-align: center;"><tag:tortpl[].completed. /></td>
+
+  </tr>
+
+  </loop:tortpl>
+
+  <else:RESULTS_1>
+
+  <tr>
+
+    <td class="lista" align="center" colspan="9"><tag:language.NO_ACTIVE_TORR /></td>
+
+  </tr>
+
+
+  </if:RESULTS_1>
+
+</table>
+
+<br />
+
+<table width="100%" class="lista">
+
+  <tr>
+
+    <td class="block" align="center" colspan="10"><b><tag:language.HISTORY /></b></td>
+
+  </tr>
+
+  <tr>
+
+    <td align="center" class="header"><tag:language.FILE /></td>
+
+    <td align="center" class="header"><tag:language.SIZE /></td>
+
+    <td align="center" class="header"><tag:language.PEER_CLIENT /></td>
+
+    <td align="center" class="header"><tag:language.PEER_STATUS /></td>
+
+    <td align="center" class="header"><tag:language.DOWNLOADED /></td>
+
+    <td align="center" class="header"><tag:language.UPLOADED /></td>
+
+    <td align="center" class="header"><tag:language.RATIO /></td>
+
+    <td align="center" class="header"><tag:language.SHORT_S /></td>
+
+    <td align="center" class="header"><tag:language.SHORT_L /></td>
+
+    <td align="center" class="header"><tag:language.SHORT_C /></td>
+
+  </tr>
+
+  <if:RESULTS_2>
+
+  <loop:torhistory>
+
+  <tr>
+
+    <td align="center" class="lista" style="padding-left:10px;"><tag:torhistory[].filename /></td>
+
+    <td align="center" class="lista" style="text-align: center;"><tag:torhistory[].size /></td>
+
+    <td align="center" class="lista" style="text-align: center;"><tag:torhistory[].agent /></td>
+
+    <td align="center" class="lista" style="text-align: center;"><tag:torhistory[].status /></td>
+
+    <td align="center" class="lista" style="text-align: center;"><tag:torhistory[].downloaded /></td>
+
+    <td align="center" class="lista" style="text-align: center;"><tag:torhistory[].uploaded /></td>
+
+    <td align="center" class="lista" style="text-align: center;"><tag:torhistory[].ratio /></td>
+
+    <td align="center" class="<tag:torhistory[].seedscolor />" style="text-align: center;"><tag:torhistory[].seeds /></td>
+
+    <td align="center" class="<tag:torhistory[].leechcolor />" style="text-align: center;"><tag:torhistory[].leechs /></td>
+
+    <td align="center" class="lista" style="text-align: center;"><tag:torhistory[].completed /></td>
+
+  </tr>
+
+  </loop:torhistory>
+  <else:RESULTS_2>
+
+  <tr>
+
+    <td class="lista" align="center" colspan="10"><tag:language.NO_HISTORY /></td>
+
+  </tr>
+
+  </if:RESULTS_2>
+
+</table>
+
+]]></data>
+      <where>"after"</where>
+    </operation>
+  </file>
+</hack>

@@ -1,0 +1,327 @@
+<hack>
+
+  <title>Ajax rating</title>
+  <author>miskotes</author>
+  <version>1.0 r.493</version>
+
+ 
+	<file>
+		<name>"database"</name>
+		<operation>
+			<action>"sql"</action>
+			<data><![CDATA[CREATE TABLE {$db_prefix}ajax_ratings (
+  id varchar(40) NOT NULL,
+  total_votes int(11) NOT NULL,
+  total_value int(11) NOT NULL,
+  used_ips longtext
+  ) ENGINE=MyISAM;]]></data>
+		</operation>
+	</file>
+  
+  
+
+  <file>
+    <name>"$DEFAULT_ROOT/admin/admin.prune_torrents.php"</name>
+
+    <operation>
+      <search>
+
+	<![CDATA[@mysql_query("DELETE FROM {$TABLE_PREFIX}history WHERE infohash=\"$hash\"");]]></search>
+
+      <action>"add"</action>
+      <where>"after"</where>
+	    <data>
+
+		<![CDATA[
+
+               @mysql_query("DELETE FROM {$TABLE_PREFIX}ajax_ratings WHERE info_hash=\"$hash\"");
+
+
+		]]>
+
+		</data>
+    </operation>
+
+  </file>
+
+
+
+  <file>
+    <name>"$DEFAULT_ROOT/delete.php"</name>
+
+    <operation>
+      <search>
+
+	<![CDATA[@mysql_query("DELETE FROM {$TABLE_PREFIX}history WHERE infohash=\"$hash\"");]]></search>
+
+      <action>"add"</action>
+      <where>"after"</where>
+	    <data>
+
+		<![CDATA[
+
+      @mysql_query("DELETE FROM {$TABLE_PREFIX}ajax_ratings WHERE info_hash=\"$hash\"");
+
+
+		]]>
+
+		</data>
+    </operation>
+
+  </file>
+
+
+
+  <file>
+    <name>"$DEFAULT_ROOT/index.php"</name>
+
+    <operation>
+      <search><![CDATA[$morescript="
+  <script type=\"text/javascript\" src=\"$BASEURL/jscript/ajax.js\"></script>\n
+  <script type=\"text/javascript\" src=\"$BASEURL/jscript/ajax-poller.js\"></script>\n
+  <script type=\"text/javascript\" src=\"$BASEURL/jscript/animatedcollapse.js\"></script>\n
+  <script type=\"text/javascript\" src=\"$BASEURL/jscript/DV.js\"></script>\n
+  <script language=\"Javascript\" type=\"text/javascript\">
+
+  <!--
+    
+  var newwindow;
+  function popdetails(url)
+  {
+    newwindow=window.open(url,'popdetails','height=500,width=500,resizable=yes,scrollbars=yes,status=yes');
+    if (window.focus) {newwindow.focus()}
+  }
+
+  function poppeer(url)
+  {
+    newwindow=window.open(url,'poppeers','height=400,width=650,resizable=yes,scrollbars=yes');
+    if (window.focus) {newwindow.focus()}
+  }
+    
+  // -->
+  </script>";]]></search>
+      <action>replace</action>
+      <data>
+
+	<![CDATA[
+
+$morescript="
+  <script type=\"text/javascript\" src=\"$BASEURL/jscript/ajax.js\"></script>\n
+  <script type=\"text/javascript\" src=\"$BASEURL/jscript/ajax-poller.js\"></script>\n
+  <script type=\"text/javascript\" src=\"$BASEURL/jscript/animatedcollapse.js\"></script>\n
+  <script type=\"text/javascript\" src=\"$BASEURL/jscript/DV.js\"></script>\n
+  
+  <script type=\"text/javascript\" language=\"javascript\" src=\"ajaxstarrater/js/behavior.js\"></script>\n
+  <script type=\"text/javascript\" language=\"javascript\" src=\"ajaxstarrater/js/rating.js\"></script>\n
+  <link rel=\"stylesheet\" type=\"text/css\" href=\"ajaxstarrater/css/rating.css\" />\n
+
+  <script language=\"Javascript\" type=\"text/javascript\">
+
+  <!--
+    
+  var newwindow;
+  function popdetails(url)
+  {
+    newwindow=window.open(url,'popdetails','height=500,width=500,resizable=yes,scrollbars=yes,status=yes');
+    if (window.focus) {newwindow.focus()}
+  }
+
+  function poppeer(url)
+  {
+    newwindow=window.open(url,'poppeers','height=400,width=650,resizable=yes,scrollbars=yes');
+    if (window.focus) {newwindow.focus()}
+  }
+    
+  // -->
+  </script>";
+  
+
+	]]>
+
+	</data>
+    </operation>
+
+
+  </file>
+
+
+
+  <file>
+    <name>"$DEFAULT_ROOT/details.php"</name>
+
+    <operation>
+      <search>
+
+	<![CDATA[       redirect("index.php?page=torrent-details&id=$id");
+       exit();
+   }]]></search>
+
+      <action>"add"</action>
+      <where>"after"</where>
+	    <data>
+
+		<![CDATA[
+
+/* ################################################################################
+
+
+		]]>
+
+		</data>
+    </operation>
+
+
+    <operation>
+      <search>
+
+	<![CDATA[      redirect("index.php?page=torrent-details&id=$id");
+      exit();
+   }
+   exit();
+}]]></search>
+
+      <action>"add"</action>
+      <where>"after"</where>
+	    <data>
+
+		<![CDATA[
+
+################################################################################ */
+
+
+		]]>
+
+		</data>
+    </operation>
+
+
+    <operation>
+      <search>
+
+	<![CDATA[else
+    $row["cat_name"]=unesc($language["NONE"]);]]></search>
+
+      <action>"add"</action>
+      <where>"after"</where>
+	    <data>
+
+		<![CDATA[
+
+/* ################################################################################
+
+
+		]]>
+
+		</data>
+    </operation>
+
+
+    <operation>
+      <search>
+
+	<![CDATA[$row["rating"]=$s;]]></search>
+
+      <action>"add"</action>
+      <where>"after"</where>
+	    <data>
+
+		<![CDATA[
+
+*/
+# <!--
+##################################################################
+########################################################################-->
+require('ajaxstarrater/_drawrating.php'); # ajax rating
+
+  if ($row["username"]!=$CURUSER["username"] && $CURUSER["uid"]>1) {
+      $row["rating"] =  rating_bar("" . $_GET["id"]. "", 5);
+  } else {
+      $row["rating"] = rating_bar("" . $_GET["id"]. "", 5, 'static');
+  }
+  $row["rating"];
+# <!--
+##################################################################
+########################################################################-->
+
+
+		]]>
+
+		</data>
+    </operation>
+
+
+  </file>
+  
+
+  <file>
+
+    <name>"$CURRENT_FOLDER/toCopy/_config-rating.php"</name>
+    <operation><action>"copy"</action><where>"$DEFAULT_ROOT"</where><data>"_config-rating.php"</data></operation>
+
+  </file>
+
+
+  <file>
+
+    <name>"$CURRENT_FOLDER/toCopy/rpc.php"</name>
+    <operation><action>"copy"</action><where>"$DEFAULT_ROOT"</where><data>"rpc.php"</data></operation>
+
+  </file>
+
+
+  <file>
+
+    <name>"$CURRENT_FOLDER/toCopy/ajaxstarrater/_drawrating.php"</name>
+    <operation><action>"copy"</action><where>"$DEFAULT_ROOT/ajaxstarrater"</where><data>"_drawrating.php"</data></operation>
+
+  </file>
+
+
+  <file>
+
+    <name>"$CURRENT_FOLDER/toCopy/ajaxstarrater/db.php"</name>
+    <operation><action>"copy"</action><where>"$DEFAULT_ROOT/ajaxstarrater"</where><data>"db.php"</data></operation>
+
+  </file>
+
+
+  <file>
+
+    <name>"$CURRENT_FOLDER/toCopy/ajaxstarrater/css/rating.css"</name>
+    <operation><action>"copy"</action><where>"$DEFAULT_ROOT/ajaxstarrater/css"</where><data>"rating.css"</data></operation>
+
+  </file>
+
+
+  <file>
+
+    <name>"$CURRENT_FOLDER/toCopy/ajaxstarrater/images/starrating.gif"</name>
+    <operation><action>"copy"</action><where>"$DEFAULT_ROOT/ajaxstarrater/images"</where><data>"starrating.gif"</data></operation>
+
+  </file>
+  
+  
+  <file>
+
+    <name>"$CURRENT_FOLDER/toCopy/ajaxstarrater/images/working.gif"</name>
+    <operation><action>"copy"</action><where>"$DEFAULT_ROOT/ajaxstarrater/images"</where><data>"working.gif"</data></operation>
+
+  </file>
+
+
+  <file>
+
+    <name>"$CURRENT_FOLDER/toCopy/ajaxstarrater/js/behavior.js"</name>
+    <operation><action>"copy"</action><where>"$DEFAULT_ROOT/ajaxstarrater/js"</where><data>"behavior.js"</data></operation>
+
+  </file>
+
+
+  <file>
+
+    <name>"$CURRENT_FOLDER/toCopy/ajaxstarrater/js/rating.js"</name>
+    <operation><action>"copy"</action><where>"$DEFAULT_ROOT/ajaxstarrater/js"</where><data>"rating.js"</data></operation>
+
+  </file>
+
+</hack>

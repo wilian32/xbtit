@@ -1,0 +1,224 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<hack>
+  <!-- hack description -->
+  <title>XTD - Extended Torrent Description</title>
+  <author>Khez</author>
+  <version>0.7</version>
+	<!-- Test For Khez Optimized System -->
+	<file>
+    <name>"$DEFAULT_ROOT/include/config.php"</name>
+    <operation>
+		  <action>replace</action>
+      <search><![CDATA[get_khez_config]]></search>
+      <data><![CDATA[get_khez_config]]></data>
+		</operation>
+	</file>
+	<!-- SQL STUFF -->
+  <file>
+    <name>"database"</name>
+    <!-- XTD Khez Configs Delete -->
+    <operation>
+      <action>"sql"</action>
+      <data><![CDATA[
+        DELETE FROM `{$db_prefix}khez_configs` WHERE `key` LIKE 'xtd_%';
+      ]]></data>
+    </operation>
+		<!-- XTD Khez Configs Populate -->
+    <operation>
+      <action>"sql"</action>
+      <data><![CDATA[
+			  INSERT INTO `{$db_prefix}khez_configs` VALUES
+			    ('xtd_enabled', 'false'),
+			    ('xtd_img', 1),
+			    ('xtd_url', 1),
+			    ('xtd_chars', 100),
+			    ('xtd_file', 'Downloaded from YOUR_TRACKER.com'),
+			    ('xtd_casesens', 'true'),
+			    ('xtd_loc', 3);
+      ]]></data>
+    </operation>
+  </file>
+  <!-- XTD Admin Menu Item -->
+  <file>
+    <name>"$DEFAULT_ROOT/admin/admin.menu.php"</name>
+    <operation>
+      <action>"add"</action>
+      <data><![CDATA[,
+                          array(
+                    'url'=>'index.php?page=admin&amp;user='.$CURUSER['uid'].'&amp;code='.$CURUSER['random'].'&amp;do=xtd' ,
+                    'description'=>$language['XTD_ACP'])]]></data>
+      <where>"after"</where>
+      <search><![CDATA[3=>array(
+                    "url"=>"index.php?page=admin&amp;user=".$CURUSER["uid"]."&amp;code=".$CURUSER["random"]."&amp;do=blocks&amp;action=read" ,
+                    "description"=>$language["ACP_BLOCKS"])]]></search>
+    </operation>
+  </file>
+  <!-- XTD Admin Page Load -->
+  <file>
+    <name>"$DEFAULT_ROOT/admin/admin.index.php"</name>
+    <operation>
+      <action>"add"</action>
+      <data><![CDATA[    case 'xtd':
+      include($ADMIN_PATH.'/admin.xtd.php');
+      $tpl->set('main_content',set_block($language['XTD_ACP'],'center',$admintpl->fetch(load_template('admin.xtd.tpl'))));
+      break;]]></data>
+      <where>"after"</where>
+      <search><![CDATA[    case 'users':
+      include("$ADMIN_PATH/admin.users.tools.php");
+      $tpl->set("main_content",set_block($block_title,"center",$admintpl->fetch(load_template("admin.users.tools.tpl"))));
+      break;]]></search>
+    </operation>
+  </file>
+	<!-- XTD Upload Checks -->
+  <file>
+    <name>"$DEFAULT_ROOT/upload.php"</name>
+    <operation>
+      <action>"add"</action>
+      <data><![CDATA[
+# get config
+$xtdfig_db=get_khez_config("SELECT `key`,`value` FROM `{$TABLE_PREFIX}khez_configs` WHERE `key` LIKE 'xtd_%' LIMIT 7;", $reload_cfg_interval);
+# get langs
+require(load_language('lang_xtd.php'));
+if ($xtdfig_db['xtd_enabled']) {
+	# internal torrent ?
+	$internal=true;
+	if (isset($array['announce-list'])) {
+		foreach ($array['announce-list'] as $tracker)
+			if (!in_array($tracker, $TRACKER_ANNOUNCEURLS)) {
+				$internal=false;
+				break;
+			}
+	} elseif (!in_array($array['announce'], $TRACKER_ANNOUNCEURLS)) {
+		$internal=false;
+	}
+	# search for file only if internal
+	$file=$xtdfig_db['xtd_file'];
+	if (($file!='') && ($internal)) {
+		$tors=array();
+		if (isset($array['info']['files'])) {
+			$tors=$array['info']['files']; # multi file up
+		} elseif (isset($array['info']['name'])) {
+			$tors['path'][0]=$array['info']['name']; # single file up
+		} else {
+			# wrong decoding ?
+		}
+		switch ($xtdfig_db['xtd_loc']) {
+			case 0:
+				$regexp='/^'.$file.'$/';
+				break;
+			case 1:
+				$regexp='/^'.$file.'/';
+				break;
+			case 2:
+				$regexp='/'.$file.'$/';
+				break;
+			default:
+				$regexp='/'.$file.'/';
+		}
+		$insens=($xtdfig_db['xtd_casesens'])?'':'i';
+		foreach ($tors as $torfile) {
+			if (preg_match($regexp.$insens, $torfile['path'][0])) {
+				$found_it=true;
+				break;
+			}
+		}
+		if ( !isset($found_it) )
+			stderr($language['ERROR'], sprintf($language['XTD_ERROR_FILE'], $file));
+	}
+
+	# create bbcode test array
+	$bbcodes=array();
+	if ($xtdfig_db['xtd_img']!=0)
+		$bbcodes[]=array( 'name' => 'img', 'min' => $xtdfig_db['xtd_img'] );
+	if ($xtdfig_db['xtd_url']!=0)
+		$bbcodes[]=array( 'name' => 'url', 'min' => $xtdfig_db['xtd_url'] );
+
+	# test bbcode
+	$lowercase_info=strtolower($_POST['info']);
+	foreach ($bbcodes as $bbcode)
+		if (substr_count($lowercase_info, '['.$bbcode['name']) < $bbcode['min'])
+			stderr($language['ERROR'],sprintf($language['XTD_ERROR_TAGS'], $bbcode['min'], $bbcode['name']));
+
+	# test length
+	if ($xtdfig_db['xtd_chars']!=0)
+		if (strlen($_POST['info']) < $xtdfig_db['xtd_chars'])
+			stderr($language['ERROR'],sprintf($language['XTD_ERROR_CHARS'], $xtdfig_db['xtd_chars']));
+}
+      ]]></data>
+      <where>"after"</action>
+      <search><![CDATA[$filename = mysql_escape_string(htmlspecialchars($_FILES["torrent"]["name"]));]]></search>
+    </operation>
+  </file>
+	<!-- XTD Edit Checks -->
+  <file>
+    <name>"$DEFAULT_ROOT/edit.php"</name>
+    <operation>
+      <action>"add"</action>
+      <data><![CDATA[
+     # get config
+     $xtdfig_db=get_khez_config("SELECT `key`,`value` FROM `{$TABLE_PREFIX}khez_configs` WHERE `key` LIKE 'xtd_%' LIMIT 7;", $reload_cfg_interval);
+     # get langs
+     require(load_language('lang_xtd.php'));
+     if ($xtdfig_db['xtd_enabled']) {
+       # create bbcode test array
+       $bbcodes=array();
+       if ($xtdfig_db['xtd_img']!=0)
+         $bbcodes[]=array( 'name' => 'img', 'min' => $xtdfig_db['xtd_img'] );
+       if ($xtdfig_db['xtd_url']!=0)
+         $bbcodes[]=array( 'name' => 'url', 'min' => $xtdfig_db['xtd_url'] );
+
+       # test bbcode
+			 $lowercase_info=strtolower($_POST['comment']);
+       foreach ($bbcodes as $bbcode)
+         if (substr_count($lowercase_info, '['.$bbcode['name']) < $bbcode['min'])
+           stderr($language['ERROR'],sprintf($language['XTD_ERROR_TAGS'], $bbcode['min'], $bbcode['name']));
+
+       # test length
+       if ($xtdfig_db['xtd_chars']!=0)
+         if (strlen($_POST['comment']) < $xtdfig_db['xtd_chars'])
+           stderr($language['ERROR'],sprintf($language['XTD_ERROR_CHARS'], $xtdfig_db['xtd_chars']));
+     }
+      ]]></data>
+      <where>"after"</action>
+      <search><![CDATA[if ($_POST["action"]==$language["FRM_CONFIRM"]) {]]></search>
+    </operation>
+  </file>
+	<!-- Admin XTD Settings Page -->
+  <file>
+    <name>"$CURRENT_FOLDER/new_files/admin.php"</name>
+    <operation>
+      <action>"copy"</action>
+      <where>"$DEFAULT_ROOT/admin/"</where>
+      <data>"admin.xtd.php"</data>
+    </operation>
+  </file>
+	<!-- Admin XTD Settings Template -->
+  <file>
+    <name>"$CURRENT_FOLDER/new_files/admin.tpl"</name>
+    <operation>
+      <action>"copy"</action>
+      <where>"$DEFAULT_ROOT/style/xbtit_default/"</where>
+      <data>"admin.xtd.tpl"</data>
+    </operation>
+  </file>
+	<!-- Language Packs -->
+	<!-- XTD English -->
+  <file>
+    <name>"$CURRENT_FOLDER/new_files/english.php"</name>
+		<operation>
+      <action>"copy"</action>
+      <where>"$DEFAULT_ROOT/language/english/"</where>
+      <data>"lang_xtd.php"</data>
+    </operation>
+  </file>
+	<!-- XTD English Admin Language -->
+  <file>
+    <name>"$DEFAULT_ROOT/language/english/lang_admin.php"</name>
+    <operation>
+      <search><![CDATA[?>]]></search>
+      <action>"add"</action>
+      <data><![CDATA[$language['XTD_ACP']='XTD Settings';]]></data>
+      <where>"before"</where>
+    </operation>
+  </file>
+</hack>

@@ -1,0 +1,20 @@
+0.7 - 2008.05.014 - Update
+FEATURE - Added filename match cases 'Exact', 'At Start', 'At End', 'Anywhere' *
+FEATURE - Added case insensitive option. EX: Downloaded = downLoadEd in case insensitive mode ) *
+CHANGED - Test of file on external/multi torrents no longer done *
+FIXED   - Case Insensitive match on tags. EX: img = IMG (Thanks to: Simis@cartoonchaos.org)
+*Thanks to Soul Destroyer over at xbtit.com
+
+0.6 - 2008.05.12 - Initial Release
+FEATURE - Prohibits upload if a certain file is not found (ex: "Downloaded from YOUR_TRACKER.com")
+FEATURE - Prohibits upload/edit if the description is not n chars long
+FEATURE - Prohibits upload/edit if the description does not have a set number of img or url tags
+FEATURE - Option to completely disable the hack
+ADDED   - 5 new vars in config
+ADDED   - Admin XTD settings page
+ADDED   - English language variables
+OPTIM   - Uses the Khez Config System
+OPTIM   - Database usage down to a minimum
+OPTIM   - SQL uninstall before hack uninstall
+
+0.1 - 0.5 - Development Stage

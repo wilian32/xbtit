@@ -1,0 +1,154 @@
+<hack>
+  <title>Group Colours Overall</title>
+  <author>Petr1fied</author>
+  <version>1.1</version>
+  <file>
+    <name>"$DEFAULT_ROOT/details.php"</name>
+    <operation>
+      <search><![CDATA[$res = get_result("SELECT f.info_hash, f.filename, f.url, UNIX_TIMESTAMP(f.data) as data, f.size, f.comment, f.uploader, c.name as cat_name, $tseeds, $tleechs, $tcompletes, f.speed, f.external, f.announce_url,UNIX_TIMESTAMP(f.lastupdate) as lastupdate,UNIX_TIMESTAMP(f.lastsuccess) as lastsuccess, f.anonymous, u.username FROM $ttables LEFT JOIN {$TABLE_PREFIX}categories c ON c.id=f.category LEFT JOIN {$TABLE_PREFIX}users u ON u.id=f.uploader WHERE f.info_hash ='" . $id . "'",true);]]></search>
+      <action>"replace"</action>
+      <data><![CDATA[$res = get_result("SELECT f.info_hash, f.filename, f.url, UNIX_TIMESTAMP(f.data) as data, f.size, f.comment, f.uploader, c.name as cat_name, $tseeds, $tleechs, $tcompletes, f.speed, f.external, f.announce_url,UNIX_TIMESTAMP(f.lastupdate) as lastupdate,UNIX_TIMESTAMP(f.lastsuccess) as lastsuccess, f.anonymous, u.username, ul.prefixcolor, ul.suffixcolor FROM $ttables LEFT JOIN {$TABLE_PREFIX}categories c ON c.id=f.category LEFT JOIN {$TABLE_PREFIX}users u ON u.id=f.uploader LEFT JOIN {$TABLE_PREFIX}users_level ul ON u.id_level=ul.id WHERE f.info_hash ='" . $id . "'",true);]]></data>
+    </operation>
+    <operation>
+      <search><![CDATA[    $uploader="<a href=\"index.php?page=userdetails&amp;id=".$row['uploader']."\">".$row["username"]."</a>";]]></search>
+      <action>"replace"</action>
+      <data><![CDATA[    $uploader="<a href=\"index.php?page=userdetails&amp;id=".$row['uploader']."\">" . stripslashes($row["prefixcolor"]) . $row["username"] . stripslashes($row["suffixcolor"]) . "</a>";]]></data>
+    </operation>
+    <operation>
+      <search><![CDATA[$subres = do_sqlquery("SELECT c.id, text, UNIX_TIMESTAMP(added) as data, user, u.id as uid FROM {$TABLE_PREFIX}comments c LEFT JOIN {$TABLE_PREFIX}users u ON c.user=u.username WHERE info_hash = '" . $id . "' ORDER BY added DESC");]]></search>
+      <action>"replace"</action>
+      <data><![CDATA[$subres = do_sqlquery("SELECT c.id, c.text, UNIX_TIMESTAMP(c.added) as data, c.user, u.id uid, ul.prefixcolor, ul.suffixcolor FROM {$TABLE_PREFIX}comments c LEFT JOIN {$TABLE_PREFIX}users u ON c.user=u.username LEFT JOIN {$TABLE_PREFIX}users_level ul ON u.id_level=ul.id WHERE info_hash = '" . $id . "' ORDER BY c.added DESC");]]></data>
+    </operation>
+    <operation>
+      <search><![CDATA[       $comments[$count]["user"]="<a href=\"index.php?page=userdetails&amp;id=".$subrow["uid"]."\">" . unesc($subrow["user"]);]]></search>
+      <action>"replace"</action>
+      <data><![CDATA[       $comments[$count]["user"]="<a href=\"index.php?page=userdetails&amp;id=".$subrow["uid"]."\">" . stripslashes($subrow["prefixcolor"]) . unesc($subrow["user"]) . stripslashes($subrow["suffixcolor"]) . "</a>";]]></data>
+    </operation>
+  </file>
+  <file>
+    <name>"$DEFAULT_ROOT/peers.php"</name>
+    <operation>
+      <search><![CDATA[ if ($XBTT_USE)
+    $resu=do_sqlquery("SELECT u.username,u.id,c.flagpic,c.name FROM {$TABLE_PREFIX}users u LEFT JOIN {$TABLE_PREFIX}countries c ON c.id=u.flag WHERE u.id='".$row["uid"]."'");
+ elseif ($PRIVATE_ANNOUNCE)
+    $resu=do_sqlquery("SELECT u.username,u.id,c.flagpic,c.name FROM {$TABLE_PREFIX}users u LEFT JOIN {$TABLE_PREFIX}countries c ON c.id=u.flag WHERE u.pid='".$row["pid"]."'");
+ else
+    $resu=do_sqlquery("SELECT u.username,u.id,c.flagpic,c.name FROM {$TABLE_PREFIX}users u LEFT JOIN {$TABLE_PREFIX}countries c ON c.id=u.flag WHERE u.cip='".$row["ip"]."'");]]></search>
+      <action>"replace"</action>
+      <data><![CDATA[ if ($XBTT_USE)
+    $resu=do_sqlquery("SELECT u.username,u.id,c.flagpic,c.name,ul.prefixcolor,ul.suffixcolor FROM {$TABLE_PREFIX}users u LEFT JOIN {$TABLE_PREFIX}countries c ON c.id=u.flag LEFT JOIN {$TABLE_PREFIX}users_level ul ON u.id_level=ul.id WHERE u.id='".$row["uid"]."'");
+ elseif ($PRIVATE_ANNOUNCE)
+    $resu=do_sqlquery("SELECT u.username,u.id,c.flagpic,c.name,ul.prefixcolor,ul.suffixcolor FROM {$TABLE_PREFIX}users u LEFT JOIN {$TABLE_PREFIX}countries c ON c.id=u.flag LEFT JOIN {$TABLE_PREFIX}users_level ul ON u.id_level=ul.id WHERE u.pid='".$row["pid"]."'");
+ else
+    $resu=do_sqlquery("SELECT u.username,u.id,c.flagpic,c.name,ul.prefixcolor,ul.suffixcolor FROM {$TABLE_PREFIX}users u LEFT JOIN {$TABLE_PREFIX}countries c ON c.id=u.flag LEFT JOIN {$TABLE_PREFIX}users_level ul ON u.id_level=ul.id WHERE u.cip='".$row["ip"]."'");]]></data>
+    </operation>
+    <operation>
+      <search><![CDATA[$peers[$i]["USERNAME"]="<a href=\"javascript: windowunder('index.php?page=userdetails&amp;id=$rowuser[1]')\">".unesc($rowuser[0])."</a>";]]></search>
+      <action>"replace"</action>
+      <data><![CDATA[$peers[$i]["USERNAME"]="<a href=\"javascript: windowunder('index.php?page=userdetails&amp;id=$rowuser[1]')\">" . stripslashes($rowuser[4]) . unesc($rowuser[0]) . stripslashes($rowuser[5]) . "</a>";]]></data>
+     </operation>
+    <operation>
+      <search><![CDATA[$peers[$i]["USERNAME"]="<a href=\"index.php?page=userdetails&amp;id=$rowuser[1]\">".unesc($rowuser[0])."</a>";]]></search>
+      <action>"replace"</action>
+      <data><![CDATA[$peers[$i]["USERNAME"]="<a href=\"index.php?page=userdetails&amp;id=$rowuser[1]\">" . stripslashes($rowuser[4]) . unesc($rowuser[0]) . stripslashes($rowuser[5]) . "</a>";]]></data>
+    </operation>
+  </file>
+  <file>
+    <name>"$DEFAULT_ROOT/ajaxchat/getChatData.php"</name>
+    <operation>
+      <search><![CDATA[    $sql =  "SELECT * FROM {$TABLE_PREFIX}chat WHERE id > ".$lastID." ORDER BY id DESC LIMIT 10";]]></search>
+      <action>"replace"</action>
+      <data><![CDATA[    $sql =  "SELECT c.*, ul.prefixcolor, ul.suffixcolor FROM {$TABLE_PREFIX}chat c LEFT JOIN {$TABLE_PREFIX}users u ON c.uid=u.id LEFT JOIN {$TABLE_PREFIX}users_level ul ON u.id_level=ul.id WHERE c.id > ".$lastID."  ORDER BY c.id DESC LIMIT 10";]]></data>
+    </operation>
+    <operation>
+      <search><![CDATA[        $name = $row[name];]]></search>
+      <action>"replace"</action>
+      <data><![CDATA[        $name = stripslashes($row[prefixcolor]) . $row[name] . stripslashes($row[suffixcolor]);]]></data>
+    </operation>
+  </file>
+  <file>
+    <name>"$DEFAULT_ROOT/ajaxchat/getHistoryChatData.php"</name>
+    <operation>
+      <search><![CDATA[    $sql =  "SELECT * FROM {$TABLE_PREFIX}chat WHERE id > ".$lastID." AND id != ".$sid." ORDER BY id DESC";]]></search>
+      <action>"replace"</action>
+      <data><![CDATA[    $sql =  "SELECT c.*, ul.prefixcolor, ul.suffixcolor FROM {$TABLE_PREFIX}chat c LEFT JOIN {$TABLE_PREFIX}users u ON c.uid=u.id LEFT JOIN {$TABLE_PREFIX}users_level ul ON u.id_level=ul.id WHERE c.id > ".$lastID."  ORDER BY c.id DESC";]]></data>
+    </operation>
+    <operation>
+      <search><![CDATA[        $name = $row[name];]]></search>
+      <action>"replace"</action>
+      <data><![CDATA[        $name = stripslashes($row["prefixcolor"]) . $row["name"] . stripslashes($row["suffixcolor"]);]]></data>
+    </operation>
+  </file>
+  <file>
+    <name>"$DEFAULT_ROOT/blocks/forum_block.php"</name>
+    <operation>
+      <search><![CDATA[                   $exclude=($exclude." AND {$db_prefix}messages.ID_BOARD!=".$forumid);]]></search>
+      <action>"replace"</action>
+      <data><![CDATA[                   $exclude=($exclude." AND m.ID_BOARD!=".$forumid);]]></data>
+    </operation>
+    <operation>
+      <search><![CDATA[         $query ="SELECT {$db_prefix}messages.ID_TOPIC AS tid, {$db_prefix}messages.subject AS title, ";
+         $query.="{$db_prefix}topics.ID_MEMBER_UPDATED AS last_poster_id, {$db_prefix}messages.posterTime ";
+         $query.="AS last_post, {$db_prefix}topics.ID_LAST_MSG AS goto_last_post, {$db_prefix}messages.posterName ";
+         $query.="AS last_poster_name, {$db_prefix}messages.ID_BOARD AS forumid, {$db_prefix}topics.ID_BOARD AS id, ";
+         $query.="{$db_prefix}boards.memberGroups AS forum_permissions FROM {$db_prefix}messages, {$db_prefix}topics, ";
+         $query.="{$db_prefix}boards WHERE {$db_prefix}messages.ID_BOARD = {$db_prefix}topics.ID_BOARD ";
+         $query.="AND {$db_prefix}messages.ID_MSG = {$db_prefix}topics.ID_LAST_MSG AND {$db_prefix}boards.ID_BOARD ";
+         $query.="= {$db_prefix}topics.ID_BOARD  ".$exclude." ORDER BY {$db_prefix}messages.posterTime DESC ".$limit;]]></search>
+      <action>"replace"</action>
+      <data><![CDATA[         $query ="SELECT m.ID_TOPIC tid, m.subject title, t.ID_MEMBER_UPDATED last_poster_id, m.posterTime last_post, t.ID_LAST_MSG goto_last_post, m.posterName last_poster_name, m.ID_BOARD forumid, t.ID_BOARD id, b.memberGroups forum_permissions, u.smf_fid, ul.prefixcolor, ul.suffixcolor ";
+         $query.="FROM {$db_prefix}messages m, {$db_prefix}topics t, {$db_prefix}boards b, {$TABLE_PREFIX}users u, {$TABLE_PREFIX}users_level ul ";
+         $query.="WHERE m.ID_BOARD = t.ID_BOARD ";
+         $query.="AND m.ID_MSG = t.ID_LAST_MSG ";
+         $query.="AND b.ID_BOARD = t.ID_BOARD ";
+         $query.="AND t.ID_MEMBER_UPDATED = u.id ";
+         $query.="AND u.id_level = ul.id ";
+         $query.="$exclude ";
+         $query.="ORDER BY m.posterTime DESC ";
+         $query.=$limit;]]></data>
+    </operation>
+    <operation>
+      <search><![CDATA[                   print("<tr><td class=\"lista\"><b><a title=\"".$language["FIRST_UNREAD"].": ".preg_replace("/Re:/", "", $trow["title"])."\" href=\"index.php?page=forum&amp;action=viewtopic&amp;topicid=" . $trow['tid'] . ".msg" . $trow['goto_last_post'] . "#new\">" . substr($title,0,30) . "...</a></b><br />".$language["LAST_POST_BY"]." <a href='smf/index.php?action=profile;u=" . $trow['last_poster_id'] . "'>" .$trow['last_poster_name'] ."</a><br />On " . date('d/m/Y H:i:s',$trow["last_post"]). "</td></tr>\n");
+               }
+               else
+               {
+                   print("<tr><td class=\"lista\"><b><a title=\"".$language["FIRST_UNREAD"].": ".preg_replace("/Re:/", "", $trow["title"])."\" href=\"index.php?page=forum&amp;action=viewtopic&amp;topicid=" . $trow['tid'] . ".msg" . $trow['goto_last_post'] . "#new\">" . $title . "</a></b><br />".$language["LAST_POST_BY"]." <a href='index.php?page=forum&amp;action=profile;u=" . $trow['last_poster_id'] . "'>" .$trow['last_poster_name'] ."</a><br />On " . date('d/m/Y H:i:s',$trow["last_post"]). "</td></tr>\n");]]></search>
+      <action>"replace"</action>
+      <data><![CDATA[                   print("<tr><td class=\"lista\"><b><a title=\"".$language["FIRST_UNREAD"].": ".preg_replace("/Re:/", "", $trow["title"])."\" href=\"index.php?page=forum&amp;action=viewtopic&amp;topicid=" . $trow['tid'] . ".msg" . $trow['goto_last_post'] . "#new\">" . substr($title,0,30) . "...</a></b><br />".$language["LAST_POST_BY"]." <a href='smf/index.php?action=profile;u=" . $trow['last_poster_id'] . "'>" . stripslashes($trow['prefixcolor']) . $trow['last_poster_name'] . stripslashes($trow['suffixcolor']) . "</a><br />On " . date('d/m/Y H:i:s',$trow["last_post"]). "</td></tr>\n");
+               }
+               else
+               {
+                   print("<tr><td class=\"lista\"><b><a title=\"".$language["FIRST_UNREAD"].": ".preg_replace("/Re:/", "", $trow["title"])."\" href=\"index.php?page=forum&amp;action=viewtopic&amp;topicid=" . $trow['tid'] . ".msg" . $trow['goto_last_post'] . "#new\">" . $title . "</a></b><br />".$language["LAST_POST_BY"]." <a href='index.php?page=forum&amp;action=profile;u=" . $trow['last_poster_id'] . "'>" . stripslashes($trow['prefixcolor']) . $trow['last_poster_name'] . stripslashes($trow['suffixcolor']) . "</a><br />On " . date('d/m/Y H:i:s',$trow["last_post"]). "</td></tr>\n");]]></data>
+    </operation>
+  </file>
+  <file>
+    <name>"$DEFAULT_ROOT/blocks/mainmenu_block.php"</name>
+    <operation>
+      <search><![CDATA[    print("<td class=\"header\" align=\"center\">".$language["WELCOME_BACK"]." " . $CURUSER["username"] ." \n");]]></search>
+      <action>"replace"</action>
+      <data><![CDATA[    print("<td class=\"header\" align=\"center\">".$language["WELCOME_BACK"]." " . stripslashes($CURUSER["prefixcolor"]) . $CURUSER["username"] . stripslashes($CURUSER["suffixcolor"]) . " \n");]]></data>
+    </operation>
+  </file>
+  <file>
+    <name>"$DEFAULT_ROOT/blocks/online_block.php"</name>
+    <operation>
+      <search><![CDATA[            if (isset($group[unesc(ucfirst($users_online["user_group"]))]))
+               $group[unesc(ucfirst($users_online["user_group"]))]++;
+            else
+               $group[unesc(ucfirst($users_online["user_group"]))]=1;]]></search>
+      <action>"replace"</action>
+      <data><![CDATA[            if (isset($group[unesc(ucfirst($users_online["prefixcolor"] . $users_online["user_group"] . $users_online["suffixcolor"]))]))
+               $group[unesc(ucfirst($users_online["prefixcolor"] . $users_online["user_group"] . $users_online["suffixcolor"]))]++;
+            else
+               $group[unesc(ucfirst($users_online["prefixcolor"] . $users_online["user_group"] . $users_online["suffixcolor"]))]=1;]]></data>
+    </operation>
+  </file>
+  <file>
+    <name>"$DEFAULT_ROOT/blocks/user_block.php"</name>
+    <operation>
+      <search><![CDATA[             print("\n<form name=\"jump\" method=\"post\" action=\"index.php\">\n<table class=\"poller\" width=\"100%\" cellspacing=\"0\">\n<tr><td align=\"center\">".$language["USER_NAME"].":  " .unesc($CURUSER["username"])."</td></tr>\n");]]></search>
+      <action>"replace"</action>
+      <data><![CDATA[             print("\n<form name=\"jump\" method=\"post\" action=\"index.php\">\n<table class=\"poller\" width=\"100%\" cellspacing=\"0\">\n<tr><td align=\"center\">".$language["USER_NAME"].":  " .unesc($CURUSER["prefixcolor"] . $CURUSER["username"] . $CURUSER["suffixcolor"])."</td></tr>\n");]]></data>
+    </operation>
+  </file>
+</hack>

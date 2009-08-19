@@ -1,0 +1,77 @@
+<hack>
+
+  <title>Graphic average bar</title>
+  <author>miskotes</author>
+  <version>1.0</version>
+
+  <file>
+    <name>"$DEFAULT_ROOT/torrents.php"</name>
+
+    <operation>
+      <search>
+
+	<![CDATA[  }
+  $torrents[$i]["average"]=$prgsf;]]></search>
+
+	<action>replace</action>
+
+	      <data>
+
+		<![CDATA[
+
+  if ($prgsf <= 100)
+     $prgpic="images/progbar-green.gif";
+  if ($prgsf == 0)
+    $bckgpic="images/progbar-black.gif";
+  else
+    $bckgpic="images/progbar-red.gif";
+
+	 $progressbar="<table border=0 width=44 cellspacing=0 cellpadding=0><tr><td align=right border=0 width=2><img src=\"images/bar_left.gif\">";
+	 $progressbar.="<td align=left border=0 background=\"$bckgpic\" width=40><img height=9 width=".(number_format($prgsf,0)/2.5)." src=\"$prgpic\"></td><td align=right border=0 width=2><img src=\"images/bar_right.gif\"></td></tr></table>";
+
+
+  }
+  $torrents[$i]["average"]="".$prgsf."<br />".$progressbar."";
+
+		]]>
+
+		</data>
+    </operation>
+
+  </file>
+
+
+  <file>
+
+    <name>"$CURRENT_FOLDER/toCopy/bar_left.gif"</name>
+    <operation><action>"copy"</action><where>"$DEFAULT_ROOT/images"</where><data>"bar_left.gif"</data></operation>
+
+  </file>
+
+  <file>
+
+    <name>"$CURRENT_FOLDER/toCopy/bar_right.gif"</name>
+    <operation><action>"copy"</action><where>"$DEFAULT_ROOT/images"</where><data>"bar_right.gif"</data></operation>
+
+  </file>
+
+  <file>
+
+    <name>"$CURRENT_FOLDER/toCopy/progbar-black.gif"</name>
+    <operation><action>"copy"</action><where>"$DEFAULT_ROOT/images"</where><data>"progbar-black.gif"</data></operation>
+
+  </file>
+
+  <file>
+
+    <name>"$CURRENT_FOLDER/toCopy/progbar-green.gif"</name>
+    <operation><action>"copy"</action><where>"$DEFAULT_ROOT/images"</where><data>"progbar-green.gif"</data></operation>
+
+  </file>
+
+  <file>
+
+    <name>"$CURRENT_FOLDER/toCopy/progbar-red.gif"</name>
+    <operation><action>"copy"</action><where>"$DEFAULT_ROOT/images"</where><data>"progbar-red.gif"</data></operation>
+
+  </file>

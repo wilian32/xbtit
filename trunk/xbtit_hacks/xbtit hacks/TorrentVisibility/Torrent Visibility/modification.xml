@@ -1,0 +1,446 @@
+<hack>
+  <title>Torrent visibility</title>
+  <author>Torrent visibility by Losmi ver 1.0</author>
+  <version>1.0</version>
+  <!-- First we add sticky row in files table -->
+  <file>
+    <name>"database"</name>
+    <operation>
+          <action>"sql"</action>
+          <data><![CDATA[ALTER TABLE `{$db_prefix}files` ADD `visible` INT NOT NULL DEFAULT '3';]]></data>
+    </operation>
+    <operation>
+          <action>"sql"</action>
+          <data><![CDATA[CREATE TABLE `{$db_prefix}visible` (`id` INT NOT NULL ,`color` VARCHAR( 255 ) NOT NULL DEFAULT '#000;',`level` INT NOT NULL DEFAULT '3',PRIMARY KEY ( `id` )) ENGINE = MYISAM ;]]></data>
+    </operation>
+    <operation>
+            <action>"sql"</action>
+            <data><![CDATA[INSERT INTO `{$db_prefix}visible` (`id` ,`color`,`level`) VALUES ('1', '#000;','4');]]></data>
+     </operation>
+  </file>
+  <!-- End with sql -->
+  
+  <!-- We are adding some POST vars in upload.php file -->
+  <file>
+    <name>"$DEFAULT_ROOT/upload.php"</name>
+    <operation>
+              <search><![CDATA[else $url = 0;]]></search>
+          <action>"add"</action>
+          <data><![CDATA[
+    /*Mod by losmi - visiblity mod*/
+    $visible = 3;
+    if (isset($_POST["visible"]) && $_POST["visible"]!="")
+        $visible = sqlesc($_POST["visible"]);
+    /*End mod by losmi - visiblity mod
+    End Operation #1*/]]></data>
+          <where>"after"</where>
+    </operation>
+    <operation>
+      <search><![CDATA[ $status = do_sqlquery($query); //makeTorrent($hash, true);]]></search>
+      <action>"add"</action>
+      <data><![CDATA[
+      /*
+Mod by losmi -visible torrent
+*/
+if($visible!=3)
+            {
+            updateVisible($hash,$visible);
+            }
+/*
+Mod by losmi -visible torrent
+*/]]></data>
+      <where>"after"</where>
+    </operation>
+    <operation>
+      <search><![CDATA[$uploadtpl=new bTemplate();]]></search>
+      <action>"add"</action>
+      <data><![CDATA[
+      /*
+Mod by losmi -visible torrent
+*/
+
+    $query = "SELECT * FROM {$TABLE_PREFIX}visible";
+    $rez = do_sqlquery($query,true);
+    $rez = mysql_fetch_assoc($rez);
+    $rez_level = $rez['level'];
+    $current_level = getLevelVisible($CURUSER['id_level']);
+    $level_ok = false;
+
+if ($CURUSER["uid"]>1 && $current_level>=$rez_level && $CURUSER['can_upload']=='yes')
+   {
+    $uploadtpl->set("LEVEL_VISIBLE_OK",true,FALSE);
+   }
+else
+   {
+    $uploadtpl->set("LEVEL_VISIBLE_OK",false,TRUE);
+   }
+   unset($rez);
+   $users_level =do_sqlquery("SELECT * FROM {$TABLE_PREFIX}users_level ORDER BY id",true);
+   $visible ="<select name='visible'>";
+  while ($row = mysql_fetch_assoc($users_level))
+    {
+        if($row['id_level']>=3)
+        {
+            $visible .= "<option value=".$row['id_level'].">".$row['level']."</option>" ;
+            
+        }
+    }
+    $visible .="</select>"; 
+    $uploadtpl->set('visible',$visible);
+/*
+Mod by losmi -visible torrent
+*/]]></data>
+      <where>"after"</where>
+    </operation>
+  </file>
+  <!-- End with editing upload.php -->
+  <!-- Start edit functions.php -->
+  <file>
+    <name>"$DEFAULT_ROOT/include/functions.php"</name>
+    <operation>
+      <search><![CDATA[function load_css($css_name)]]></search>
+      <action>"add"</action>
+      <data><![CDATA[
+/*Mod by losmi - visible mod
+Operation #3*/
+function updateVisible($hash,$visible)
+{
+    global $TABLE_PREFIX;
+    $query = "UPDATE {$TABLE_PREFIX}files 
+                   SET visible=".(int)$visible."
+                   WHERE info_hash ='$hash'";
+    do_sqlquery($query,true);
+   
+}
+/*End mod by losmi - visible mod
+End Operation #3*/
+]]></data>
+      <where>"before"</where>
+    </operation>
+    <operation>
+      <search><![CDATA[function load_css($css_name)]]></search>
+      <action>"add"</action>
+      <data><![CDATA[
+/*Mod by losmi - visible mod*/
+function getLevelVisible($cur_level)
+{
+    global $TABLE_PREFIX;
+    $query = "SELECT id, id_level FROM {$TABLE_PREFIX}users_level";
+    $rez = do_sqlquery($query,true);
+    
+    while($row = mysql_fetch_assoc($rez))
+    {
+        if($row['id'] == $cur_level)
+        {
+            return $row['id_level'];
+        }
+    }
+    return 0;
+}
+/*End mod by losmi - visible mod*/
+]]></data>
+      <where>"before"</where>
+    </operation>
+  </file>
+  <!-- End edit functions.php -->
+  
+  <!--Start edit torrents.php -->
+  <file>
+    <name>"$DEFAULT_ROOT/torrents.php"</name>
+    <operation>
+     <search><![CDATA[if (isset($_GET["by"]))
+        $by=htmlspecialchars(mysql_escape_string($_GET["by"]));
+    else
+        $by="DESC";]]></search>
+      <action>"add"</action>
+      <data><![CDATA[
+/*Mod by losmi - visible mod*/
+]]></data>
+      <where>"before"</where>
+      <operation>
+              <search><![CDATA[$query = "SELECT f.info_hash as hash]]></search>
+              <action>"add"</action>
+              <data><![CDATA[, f.visible as visible]]></data>
+              <where>"after"</where>
+     </operation>
+    
+     <operation>
+              <search><![CDATA[$query = "SELECT f.info_hash as hash, $tseeds as seeds, $tleechs as leechers,]]></search>
+              <action>"add"</action>
+              <data><![CDATA[ f.visible as visible,]]></data>
+              <where>"after"</where>
+     </operation>
+    <operation>
+              <search><![CDATA[$mark="&nbsp;&darr;";]]></search>
+              <action>"add"</action>
+              <data><![CDATA[
+        /*Mod by losmi - visible mod*/
+        ]]></data>
+              <where>"before"</where>
+    </operation>
+    <operation>
+          <search><![CDATA[$torrenttpl->set("WT1",intval($CURUSER["WT"])>0,TRUE);]]></search>
+          <action>"add"</action>
+          <data><![CDATA[
+    /*Mod by losmi - visible mod*/
+    $ok_level = $data['visible'];
+    $curr_l = getLevelVisible($CURUSER['id_level']);
+    if($CURUSER['username'] == $data['uploader'] || $curr_l>=$ok_level)
+    {
+    /*Mod by losmi - end visible mod*/
+    ]]></data>
+          <where>"before"</where>
+    </operation>
+    <operation>
+          <search><![CDATA[$i++;]]></search>
+          <action>"add"</action>
+          <data><![CDATA[
+    /*Mod by losmi - visible mod*/
+    }
+    /*Mod by losmi - end visible mod*/
+    ]]></data>
+          <where>"before"</where>
+    </operation>
+    <operation>
+          <search><![CDATA[$torrenttpl->set("XBTT1",$XBTT_USE,TRUE);]]></search>
+          <action>"add"</action>
+          <data><![CDATA[
+    /*Mod by losmi - visible mod*/
+    $users_level =do_sqlquery("SELECT * FROM {$TABLE_PREFIX}users_level ORDER BY id",true);
+   
+    while ($row = mysql_fetch_assoc($users_level))
+    {
+        if($ok_level==$row['id_level'] && $row['id_level']!=3)
+        {
+            $torrents[$i]['level'] = '<br/><font color="red">(visible for '.$row['level'].' and higher)</font>';
+            
+        }
+    }
+   
+    /*Mod by losmi - end visible mod*/
+    ]]></data>
+          <where>"before"</where>
+    </operation>
+  </file>
+  <!-- End edit torrents.php -->
+
+   <!-- Start edit upload.tpl -->
+  
+  <file>
+    <name>"$DEFAULT_STYLE_PATH/upload.tpl"</name>
+    <operation>
+     <search><![CDATA[<tr>
+      <td class="header" ><tag:language.FILE_NAME /></td>
+      <td class="lista" align="left"><input type="text" name="filename" size="50" maxlength="200" /></td>
+    </tr>]]></search>
+      <action>"add"</action>
+      <data><![CDATA[
+      <if:LEVEL_VISIBLE_OK>
+    <tr>
+      <td class="header" ><tag:language.LEVEL_VISIBILE />:</td>
+      <td class="lista" align="left">
+      <tag:visible />
+      </td>
+    </tr>
+    </if:LEVEL_VISIBLE_OK>
+    ]]></data>
+      <where>"after"</where>
+    </operation>
+  </file>
+  <!-- End edit upload.tpl --> 
+  <!-- Start edit torrent.list.tpl -->
+  
+  <file>
+    <name>"$DEFAULT_STYLE_PATH/torrent.list.tpl"</name>
+    <operation>
+     <search><![CDATA[<tag:torrents[].filename />]]></search>
+      <action>"add"</action>
+      <data><![CDATA[<tag:torrents[].level />]]></data>
+      <where>"after"</where>
+    </operation>
+  </file>
+  <!-- End edit upload.tpl -->
+  
+  <!-- Start edit lang_main.tpl -->
+  
+  <file>
+    <name>"$DEFAULT_LANGUAGE_PATH/lang_main.php"</name>
+    <operation>
+     <search><![CDATA[$language["MODULE_LOAD_ERROR"]="The module required seems to be wrong!";]]></search>
+      <action>"add"</action>
+      <data><![CDATA[
+      $language["LEVEL_VISIBILE"]="Can see";
+$language["AND_HIGHER"]="and higher";
+]]></data>
+      <where>"after"</where>
+    </operation>
+  </file>
+  <!-- End edit lang_mainphp -->
+  
+  <!-- Start edit edit.php -->
+  <file>
+    <name>"$DEFAULT_ROOT/edit.php"</name>
+    <operation>
+     <search><![CDATA[if ($_POST["comment"]=='')
+        {
+        stderr("Error!","You must specify description.");
+   }]]></search>
+      <action>"add"</action>
+      <data><![CDATA[ 
+      /*Mod by losmi -visible start*/
+      $visible = 3;
+   if(isset($_POST["visible"]) && $_POST["visible"]!='')
+   {
+    $visible = sqlesc($_POST["visible"]);
+   }
+   /*Mod by losmi -visible end*/
+   ]]></data>
+      <where>"after"</where>
+      </operation>
+      <operation>
+          <search><![CDATA[ WHERE info_hash='" . $torhash . "'",true);]]></search>
+          <action>"add"</action>
+          <data><![CDATA[ , visible = $visible]]></data>
+          <where>"before"</where>
+      </operation>
+      <operation>
+          <search><![CDATA[f.info_hash, f.filename,]]></search>
+          <action>"add"</action>
+          <data><![CDATA[f.visible,]]></data>
+          <where>"after"</where>
+      </operation>
+      <operation>
+              <search><![CDATA[$torrent=array();]]></search>
+              <action>"add"</action>
+              <data><![CDATA[
+              /*Start mod visible by losmi*/
+              $query = "SELECT * FROM {$TABLE_PREFIX}visible";
+              $rez = do_sqlquery($query,true);
+              $rez = mysql_fetch_assoc($rez);
+              $rez_level = $rez['level'];
+              $current_level = getLevelVisible($CURUSER['id_level']);
+              $level_ok = false;
+
+              if ($current_level>=$rez_level )
+                 {
+                  $torrenttpl->set("LEVEL_VISIBLE_OK",true,FALSE);
+                 }
+              else
+                 {
+                  $torrenttpl->set("LEVEL_VISIBLE_OK",false,TRUE);
+                 }
+             unset($rez);
+
+              $users_level =do_sqlquery("SELECT * FROM {$TABLE_PREFIX}users_level ORDER BY id",true);
+               $torrent['visible'] ="<select name='visible'>";
+              while ($row = mysql_fetch_assoc($users_level))
+                {
+                    if($row['id_level']>=3)
+                    {
+                        if($results["visible"] == $row['id_level']){$selected ='selected';} else{$selected='';}
+                        $torrent['visible'] .= "<option value=".$row['id_level']." ".$selected.">".$row['level']."</option>" ;
+                        
+                    }
+                }
+                $torrent['visible'] .="</select>"; 
+                
+            /*End sticky by losmi*/]]></data>
+              <where>"after"</where>
+        </operation>
+        
+  </file>
+  <!-- End edit edit.php -->
+  
+ 
+  
+  <!-- Start edit lang_main.tpl -->
+  
+  <file>
+    <name>"$DEFAULT_STYLE_PATH/torrent.edit.tpl"</name>
+    <operation>
+     <search><![CDATA[ </tr>
+        <td class="header" ><tag:language.CATEGORY_FULL /></td>
+        <td class="lista"><tag:torrent.cat_combo /></td>
+      </tr>]]></search>
+      <action>"add"</action>
+      <data><![CDATA[
+      <if:LEVEL_VISIBLE_OK>
+      <tr>
+        <td align="right" class="header"><tag:language.LEVEL_VISIBILE /></td>
+        <td class="lista"><tag:torrent.visible /></td>
+      </tr>
+      </if:LEVEL_VISIBLE_OK>
+]]></data>
+      <where>"after"</where>
+    </operation>
+  </file>
+  <!-- End edit lang_mainphp -->
+  
+   <!-- Start edit lang_admin.tpl -->
+  
+  <file>
+    <name>"$DEFAULT_LANGUAGE_PATH/lang_admin.php"</name>
+    <operation>
+     <search><![CDATA[$language["ACP_BAN_IP"]="Ban IPs";]]></search>
+      <action>"add"</action>
+      <data><![CDATA[$language["ACP_VISIBLE_TORRENTS"]="Torrent visibility";
+      $language["VISIBLE_SETTINGS"]="Torrent visibility settings";
+      $language["LEVEL_VISIBLE"]="Who can add visibility torrents? (default: Uploader)";
+      ]]></data>
+      <where>"after"</where>
+    </operation>
+  </file>
+  <!-- End edit lang_admin.php -->
+  
+   <!-- Start edit admin.menu.php -->
+  <file>
+    <name>"$DEFAULT_ROOT/admin/admin.menu.php"</name>
+    <operation>
+     <search><![CDATA[0=>array(
+                    "url"=>"index.php?page=admin&amp;user=".$CURUSER["uid"]."&amp;code=".$CURUSER["random"]."&amp;do=prunet" ,
+                    "description"=>$language["ACP_PRUNE_TORRENTS"])]]></search>
+      <action>"add"</action>
+      <data><![CDATA[,
+                    2=>array(
+                    "url"=>"index.php?page=admin&amp;user=".$CURUSER["uid"]."&amp;code=".$CURUSER["random"]."&amp;do=visible" ,
+                    "description"=>$language["ACP_VISIBLE_TORRENTS"])]]></data>
+                    <where>"after"</where>
+    </operation>
+  </file>
+  <!-- End edit edit admin.menu.php -->
+  
+   <!-- Start edit admin.menu.php -->
+  <file>
+    <name>"$DEFAULT_ROOT/admin/admin.index.php"</name>
+    <operation>
+     <search><![CDATA[switch ($do)
+    {]]></search>
+      <action>"add"</action>
+      <data><![CDATA[ case 'visible':
+      include("$ADMIN_PATH/admin.visible.php");
+      $tpl->set("main_content",set_block($language["VISIBLE_SETTINGS"],"center",$admintpl->fetch(load_template("admin.visible.tpl"))));
+      break;
+]]></data>
+      <where>"after"</where>
+    </operation>
+  </file>
+  
+  <!-- End edit admin.menu.php -->
+   <!-- Copy some admin files-->
+   <file>
+  <name>"$CURRENT_FOLDER/tocopy/admin.visible.php"</name>
+    <operation>
+      <action>"copy"</action>
+      <where>"$DEFAULT_ROOT/admin"</where>
+      <data>"admin.visible.php"</data>
+    </operation>
+  </file>
+  <file>
+  <name>"$CURRENT_FOLDER/tocopy/admin.visible.tpl"</name>
+    <operation>
+      <action>"copy"</action>
+      <where>"$DEFAULT_STYLE_PATH"</where>
+      <data>"admin.visible.tpl"</data>
+    </operation>
+  </file>
+</hack>
