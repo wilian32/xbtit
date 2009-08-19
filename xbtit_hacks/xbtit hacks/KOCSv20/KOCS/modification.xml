@@ -1,0 +1,80 @@
+<hack>
+  <title>Khez's Optimized Config System</title>
+  <author>Khez</author>
+  <version>2.0</version>
+  <!-- SQL STUFF -->
+  <file>
+    <name>"database"</name>
+    <!-- Khez Configs Drop -->
+    <operation>
+      <action>"sql"</action>
+      <data><![CDATA[
+      DROP TABLE IF EXISTS `{$db_prefix}khez_configs`;
+      ]]></data>
+    </operation>
+		<!-- Khez Configs -->
+    <operation>
+      <action>"sql"</action>
+      <data><![CDATA[
+      CREATE TABLE IF NOT EXISTS `{$db_prefix}khez_configs` (
+        `key` varchar(30) NOT NULL,
+        `value` varchar(200) NOT NULL,
+         PRIMARY KEY  (`key`)
+      )
+      ]]></data>
+    </operation>
+  </file>
+	<!-- get_khez_config Function -->
+  <file>
+    <name>"$DEFAULT_ROOT/include/config.php"</name>
+    <operation>
+      <action>"add"</action>
+      <data><![CDATA[
+      function get_khez_config($qrystr, $cachetime=-1) {
+        $cache_dir=realpath(dirname(__FILE__).'/..').'/cache/';
+        $cache_ext='.txt';
+        $cache_file=$cache_dir.md5($qrystr).$cache_ext;
+
+        if ($cachetime>-1) {
+          if (file_exists($cache_file) && (time()-$cachetime) < filemtime($cache_file))
+            return unserialize(file_get_contents($cache_file));
+        }
+
+        $mr=mysql_query($qrystr) or die(mysql_error());
+        while ($mz=mysql_fetch_assoc($mr)) {
+          if ($mz['value']=='true')
+            $return[$mz['key']]= true;
+          elseif ($mz['value']=='false')
+            $return[$mz['key']]= false;
+          elseif (is_numeric($mz["value"]))
+            $return[$mz['key']]= max(0,$mz['value']);
+          else
+            $return[$mz['key']]= StripSlashes($mz['value']);
+        }
+        unset($mz);
+        mysql_free_result($mr);
+
+        if ($cachetime>-1) {
+          $fp=fopen($cache_file,'w');
+          fputs($fp,serialize($return));
+          fclose($fp);
+        }
+
+        return $return;
+      }
+      ]]></data>
+      <where>"after"</action>
+      <search><![CDATA[$reload_cfg_interval=60;]]></search>
+    </operation>
+  </file>
+	<!-- Language Pack -->
+	<!-- English -->
+  <file>
+    <name>"$CURRENT_FOLDER/new_files/english.php"</name>
+    <operation>
+      <action>"copy"</action>
+      <where>"$DEFAULT_ROOT/language/english/"</where>
+      <data>"lang_khez.php"</data>
+    </operation>
+  </file>
+</hack>

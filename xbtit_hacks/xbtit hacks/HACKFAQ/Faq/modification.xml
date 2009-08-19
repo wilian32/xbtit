@@ -1,0 +1,235 @@
+<hack>
+  <title>F.A.Q</title>
+  <author>F.A.Q with groups by Losmi ver 1.0</author>
+  <version>1.0</version>
+  <!-- First we add tables to our database -->
+  <file>
+    <name>"database"</name>
+    <operation>
+          <action>"sql"</action>
+          <data><![CDATA[CREATE TABLE `{$db_prefix}faq` (
+  `id` int(11) NOT NULL auto_increment,
+  `title` varchar(255) NOT NULL,
+  `description` text NOT NULL,
+  `cat_id` int(11) NOT NULL,
+  `active` enum('-1','0','1') NOT NULL default '1',
+  `date` date NOT NULL,
+  PRIMARY KEY  (`id`)
+) TYPE=MyISAM;]]></data>
+    </operation>
+    <operation>
+            <action>"sql"</action>
+            <data><![CDATA[CREATE TABLE `{$db_prefix}faq_group` (
+  `id` int(11) NOT NULL auto_increment,
+  `title` varchar(255) NOT NULL,
+  `description` text NOT NULL,
+  `active` enum('-1','0','1') NOT NULL default '1',
+  `sort_index` int(11) NOT NULL,
+  `date` date NOT NULL,
+  PRIMARY KEY  (`id`)
+) TYPE=MyISAM;]]></data>
+     </operation>
+  </file>
+  <!-- End with sql -->
+  
+  <!-- Start with editing index.php -->
+  <file>
+    <name>"$DEFAULT_ROOT/index.php"</name>
+    <operation>
+              <search><![CDATA[case 'index':]]></search>
+          <action>"add"</action>
+          <data><![CDATA[
+    /*Mod by losmi - faq mod*/
+    case 'faq':
+        require("$THIS_BASEPATH/faq.php");
+        $tpl->set("main_content",set_block($language["MNU_FAQ"],"center",$faqtpl->fetch(load_template("faq.tpl"))));
+        $tpl->set("main_title",$btit_settings["name"]." .::. "."Index->F.A.Q.");
+        break;
+    /*End mod by losmi faq - mod*/]]></data>
+          <where>"before"</where>
+    </operation>
+  </file>
+  <!-- End with editing index.php -->
+  
+  <!-- Start edit functions.php -->
+  <file>
+    <name>"$DEFAULT_ROOT/include/functions.php"</name>
+    <operation>
+      <search><![CDATA[function load_css($css_name)]]></search>
+      <action>"add"</action>
+      <data><![CDATA[
+/*Mod by losmi - faq mod */
+function genrelistfaq($append='',$table='faq')
+     {
+
+     global $TABLE_PREFIX;
+
+    $ret = array();
+    $res = do_sqlquery("SELECT * FROM {$TABLE_PREFIX}$table WHERE active != '-1' ".$append." ORDER BY id");
+
+    while ($row = mysql_fetch_assoc($res))
+        $ret[] = $row;
+
+    unset($row);
+    mysql_free_result($res);
+
+    return $ret;
+}
+/*End mod by losmi - faq mod*/
+]]></data>
+      <where>"before"</where>
+    </operation>
+  </file>
+  <!-- End edit functions.php -->
+  
+   <!-- Start edit mainmenu_block.php -->
+  <file>
+    <name>"$DEFAULT_ROOT/blocks/mainmenu_block.php"</name>
+    <operation>
+      <search><![CDATA[print("<td class=\"header\" align=\"center\"><a href=\"index.php?page=extra-stats\">".$language["MNU_STATS"]."</a></td>\n");]]></search>
+      <action>"add"</action>
+      <data><![CDATA[
+/*Mod by losmi - faq mod */
+print("<td class=\"header\" align=\"center\"><a href=\"index.php?page=faq\">".$language["MNU_FAQ"]."</a></td>\n");
+/*End mod by losmi - faq mod*/
+]]></data>
+      <where>"after"</where>
+    </operation>
+  </file>
+  <!-- End edit mainmenu_block.php -->
+  
+  <!-- Start edit lang_main.tpl -->
+  
+  <file>
+    <name>"$DEFAULT_LANGUAGE_PATH/lang_main.php"</name>
+    <operation>
+     <search><![CDATA[$language["MODULE_LOAD_ERROR"]="The module required seems to be wrong!";]]></search>
+      <action>"add"</action>
+      <data><![CDATA[
+//FAQ
+$language["MNU_FAQ"]="F.A.Q.";
+$language["FAQ_NAME"]="Faq group name";
+$language["FAQ_TEXT"]="Faq group description";
+$language["FAQ_SORT_INDEX"]="Faq group sort index";
+$language["FAQ_ADD"]="Insert Faq group";
+$language["FAQ_QUESTION"]="Faq question";
+$language["FAQ_ANSWER"]="Answer";
+$language["FAQ_QUESTION_ADD"]="Insert Faq guestion/answer";
+$language["FAQ_QUESTION_SEARCH_ALL"]="Search all...";
+
+]]></data>
+      <where>"after"</where>
+    </operation>
+  </file>
+  <!-- End edit lang_mainphp -->
+  <file>
+    <name>"$DEFAULT_LANGUAGE_PATH/lang_admin.php"</name>
+    <operation>
+     <search><![CDATA[$language["ACP_BAN_IP"]="Ban IPs";]]></search>
+      <action>"add"</action>
+      <data><![CDATA[//FAQ
+$language["ACP_FAQ_GROUP"]="Faq groups";
+$language["ACP_FAQ"]="Faq";
+$language["ACP_FAQ_QUESTION"]="Faq questions";
+      ]]></data>
+      <where>"after"</where>
+    </operation>
+  </file>
+  <!-- End edit lang_mainphp -->
+  
+  <!-- Start edit admin.menu.php -->
+  <file>
+    <name>"$DEFAULT_ROOT/admin/admin.menu.php"</name>
+    <operation>
+     <search><![CDATA[3=>array(
+                    "url"=>"index.php?page=admin&amp;user=".$CURUSER["uid"]."&amp;code=".$CURUSER["random"]."&amp;do=style&amp;action=read" ,
+                    "description"=>$language["ACP_STYLES"])]]></search>
+      <action>"add"</action>
+      <data><![CDATA[,
+                    4=>array(
+                    "url"=>"index.php?page=admin&amp;user=".$CURUSER["uid"]."&amp;code=".$CURUSER["random"]."&amp;do=faq_group" ,
+                    "description"=>$language["ACP_FAQ_GROUP"]),
+                    5=>array(
+                    "url"=>"index.php?page=admin&amp;user=".$CURUSER["uid"]."&amp;code=".$CURUSER["random"]."&amp;do=faq_question" ,
+                    "description"=>$language["ACP_FAQ_QUESTION"])]]></data>
+    </operation>
+    <where>"after"</where>
+  </file>
+  <!-- End edit admin.menu.php -->
+  
+   <!-- Start edit admin.index.php -->
+  <file>
+    <name>"$DEFAULT_ROOT/admin/admin.index.php"</name>
+    <operation>
+     <search><![CDATA[switch ($do)
+    {]]></search>
+      <action>"add"</action>
+      <data><![CDATA[/*Mod by losmi - faq*/
+      case 'faq_group':
+      include("$ADMIN_PATH/admin.faq.group.php");
+      $tpl->set("main_content",set_block($language["ACP_FAQ_GROUP"],"center",$admintpl->fetch(load_template("admin.faq.group.tpl"))));
+      break;
+
+
+    case 'faq_question':
+      include("$ADMIN_PATH/admin.faq.question.php");
+      $tpl->set("main_content",set_block($language["ACP_FAQ_QUESTION"],"center",$admintpl->fetch(load_template("admin.faq.question.tpl"))));
+      break;
+      /*End mod by losmi - faq*/
+]]></data>
+      <where>"after"</where>
+    </operation>
+  </file>
+  
+  <!-- End edit admin.index.php -->
+    <!-- Copy some admin files-->
+   <file>
+  <name>"$CURRENT_FOLDER/tocopy/admin.faq.group.php"</name>
+    <operation>
+      <action>"copy"</action>
+      <where>"$DEFAULT_ROOT/admin"</where>
+      <data>"admin.faq.group.php"</data>
+    </operation>
+  </file>
+  <file>
+  <name>"$CURRENT_FOLDER/tocopy/faq.php"</name>
+    <operation>
+      <action>"copy"</action>
+      <where>"$DEFAULT_ROOT"</where>
+      <data>"faq.php"</data>
+    </operation>
+  </file>
+  <file>
+  <name>"$CURRENT_FOLDER/tocopy/admin.faq.question.php"</name>
+    <operation>
+      <action>"copy"</action>
+      <where>"$DEFAULT_ROOT/admin"</where>
+      <data>"admin.faq.question.php"</data>
+    </operation>
+  </file>
+  <file>
+  <name>"$CURRENT_FOLDER/tocopy/admin.faq.group.tpl"</name>
+    <operation>
+      <action>"copy"</action>
+      <where>"$DEFAULT_STYLE_PATH"</where>
+      <data>"admin.faq.group.tpl"</data>
+    </operation>
+  </file>
+  <file>
+  <name>"$CURRENT_FOLDER/tocopy/admin.faq.question.tpl"</name>
+    <operation>
+      <action>"copy"</action>
+      <where>"$DEFAULT_STYLE_PATH"</where>
+      <data>"admin.faq.question.tpl"</data>
+    </operation>
+  </file>
+  <file>
+  <name>"$CURRENT_FOLDER/tocopy/faq.tpl"</name>
+    <operation>
+      <action>"copy"</action>
+      <where>"$DEFAULT_STYLE_PATH"</where>
+      <data>"faq.tpl"</data>
+    </operation>
+  </file>
+  
+</hack>

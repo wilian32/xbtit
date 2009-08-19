@@ -1,0 +1,89 @@
+<hack>
+    <title>Ratio Editor by dodge</title>
+    <author>JBoy</author>
+    <version>1.1</version>
+    
+    <!-- admin/admin.index.php -->
+    <file>
+        <name>"$DEFAULT_ROOT/admin/admin.index.php"</name>
+        <operation>
+            <search><![CDATA[    case 'users':
+      include("$ADMIN_PATH/admin.users.tools.php");
+      $tpl->set("main_content",set_block($block_title,"center",$admintpl->fetch(load_template("admin.users.tools.tpl"))));
+      break;]]></search>
+            <action>"add"</action>
+            <data><![CDATA[    case 'ratio-editor':
+      include("$ADMIN_PATH/admin.ratio-editor.php");
+      $tpl->set("main_content",set_block($language["ACP_RATIO_EDITOR"],"center",$admintpl->fetch(load_template("admin.ratio-editor.tpl"))));
+      break;]]></data>
+            <where>"after"</where>
+        </operation>
+    </file>
+    
+    <!-- admin/admin.menu.php -->
+    <file>
+        <name>"$DEFAULT_ROOT/admin/admin.menu.php"</name>
+        <operation>
+            <search><![CDATA[
+                    )
+            ),
+
+    3=>array(]]></search>
+            <action>"replace"</action>
+            <data><![CDATA[,
+                          4=>array(
+                    "url"=>"index.php?page=admin&amp;user=".$CURUSER["uid"]."&amp;code=".$CURUSER["random"]."&amp;do=ratio-editor" ,
+                    "description"=>$language["ACP_RATIO_EDITOR"])
+                    )
+            ),
+
+    3=>array(]]></data>
+        </operation>
+    </file>
+    
+    <!-- copy the template file admin.ratio-editor.tpl -->
+    <file>
+        <name>"$CURRENT_FOLDER/template-file.tpl"</name>
+        <operation>
+            <action>"copy"</action>
+            <where>"$DEFAULT_STYLE_PATH"</where>
+            <data>"admin.ratio-editor.tpl"</data>
+        </operation>
+    </file>
+
+    <!-- copy file admin.ratio-editor.php -->
+    <file>
+        <name>"$CURRENT_FOLDER/data-file.php"</name>
+        <operation>
+            <action>"copy"</action>
+            <where>"$DEFAULT_ROOT/admin"</where>
+            <data>"admin.ratio-editor.php"</data>
+        </operation>
+    </file>
+
+    <!-- -->
+    <file>
+        <name>"$DEFAULT_LANGUAGE_PATH/lang_admin.php"</name>
+        <operation>
+            <search><![CDATA[?>]]></search>
+            <action>"add"</action>
+            <data><![CDATA[$language["ACP_RATIO_EDITOR"] = "Ratio Editor";
+$language["RATIO_USERNAME"] = "Username";
+$language["RATIO_UPLOADED"] = "Uploaded";
+$language["RATIO_DOWNLOADED"] = "Downloaded";
+$language["RATIO_INPUT_MEASURE"] = "Select input measure:";
+$language["RATIO_BYTES"] = "Bytes";
+$language["RATIO_K_BYTES"] = "KBytes";
+$language["RATIO_M_BYTES"] = "MBytes";
+$language["RATIO_G_BYTES"] = "GBytes";
+$language["RATIO_T_BYTES"] = "TBytes";
+$language["RATIO_ACTION"] = "Action:";
+$language["RATIO_ADD"] = "Add";
+$language["RATIO_REMOVE"] = "Remove";
+$language["RATIO_REPLACE"] = "Replace";
+$language["RATIO_HEADER"] = "Update users ratio";
+$language["RATIO_SUCCES"] = "Succes";
+$language["RATIO_UPDATE_SUCCES"] = "You succesfully updated this users ratio";]]></data>
+            <where>"before"</where>
+        </operation>
+</hack>

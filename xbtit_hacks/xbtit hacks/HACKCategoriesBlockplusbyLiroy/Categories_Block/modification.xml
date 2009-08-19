@@ -1,0 +1,30 @@
+<hack>
+  <title>Categories block</title>
+  <author>Liroy (Loosely based on hack by inDream)</author>
+  <version>1.0</version>
+  <file>
+    <name>"$DEFAULT_LANGUAGE_PATH/lang_blocks.php"</name>
+    <operation>
+	  <action>"add"</action>
+	  <where>"before"</where>
+      <search><![CDATA[?>]]></search>
+      <data><![CDATA[$language["BLOCK_CAT"]="Categories";]]></data>
+    </operation>
+  </file>
+  <file>
+    <name>"$CURRENT_FOLDER/toCopy/categories_block.php"</name>
+    <operation>
+      <action>"copy"</action>
+      <where>"$DEFAULT_ROOT/blocks"</where>
+      <data>"categories_block.php"</data>
+    </operation>
+  </file>
+	<file>
+		<name>"database"</name>
+		<operation>
+			<action>"sql"</action>
+			<data><![CDATA[INSERT INTO `{$db_prefix}blocks` (`blockid`' `content`, `position`, `sortid`, `status`, `title`, `cache`, `minclassview`, `maxclassview`) VALUES (30, 'categories', 'l', 1, 1, 'BLOCK_CAT', 'no', 3, 8);
+]]></data>
+		</operation>
+	</file>
+</hack>

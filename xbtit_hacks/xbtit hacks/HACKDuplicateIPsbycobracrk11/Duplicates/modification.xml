@@ -1,0 +1,78 @@
+<hack>
+    <title>Duplicate Accounts</title>
+    <author>CobraCRK</author>
+    <version>1.1</version>
+    
+    <!-- admin/admin.index.php -->
+    <file>
+        <name>"$DEFAULT_ROOT/admin/admin.index.php"</name>
+        <operation>
+            <search><![CDATA[    case 'users':
+      include("$ADMIN_PATH/admin.users.tools.php");
+      $tpl->set("main_content",set_block($block_title,"center",$admintpl->fetch(load_template("admin.users.tools.tpl"))));
+      break;]]></search>
+            <action>"add"</action>
+            <data><![CDATA[    case 'duplicates':
+      include("$ADMIN_PATH/admin.duplicates.php");
+      $tpl->set("main_content",set_block($language["DUPLICATES"],"center",$admintpl->fetch(load_template("admin.duplicates.tpl"))));
+      break;]]></data>
+            <where>"after"</where>
+        </operation>
+    </file>
+
+    <!-- admin/admin.menu.php -->
+    <file>
+        <name>"$DEFAULT_ROOT/admin/admin.menu.php"</name>
+        <operation>
+            <search><![CDATA[
+                    )
+            ),
+
+    3=>array(]]></search>
+            <action>"replace"</action>
+            <data><![CDATA[,
+                          25=>array(
+                    "url"=>"index.php?page=admin&amp;user=".$CURUSER["uid"]."&amp;code=".$CURUSER["random"]."&amp;do=duplicates" ,
+                    "description"=>$language["DUPLICATES"])
+                    )
+            ),
+
+    3=>array(]]></data>
+        </operation>
+    </file>
+
+    
+    <!-- copy the template file admin.duplicates.tpl -->
+    <file>
+        <name>"$CURRENT_FOLDER/template.tpl"</name>
+        <operation>
+            <action>"copy"</action>
+            <where>"$DEFAULT_STYLE_PATH"</where>
+            <data>"admin.duplicates.tpl"</data>
+        </operation>
+    </file>
+
+    <!-- copy file admin.duplicates.php -->
+    <file>
+        <name>"$CURRENT_FOLDER/duplicates.php"</name>
+        <operation>
+            <action>"copy"</action>
+            <where>"$DEFAULT_ROOT/admin"</where>
+            <data>"admin.duplicates.php"</data>
+        </operation>
+    </file>
+
+    <!-- -->
+
+
+<file>
+        <name>"$DEFAULT_LANGUAGE_PATH/lang_admin.php"</name>
+        <operation>
+            <search><![CDATA[?>]]></search>
+            <action>"add"</action>
+            <data><![CDATA[$language["DUPLICATES"]="Duplicates";
+                $language["ERROR"]="Error";
+                $language["ERR_USERS_NOT_FOUND"]="No users found!";]]></data>
+            <where>"before"</where>
+        </operation>
+</hack>

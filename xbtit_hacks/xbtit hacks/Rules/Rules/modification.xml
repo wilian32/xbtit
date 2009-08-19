@@ -1,0 +1,233 @@
+<hack>
+  <title>Rules</title>
+  <author>Rules with groups by Losmi ver 1.0</author>
+  <version>1.0</version>
+  <!-- First we add tables to our database -->
+  <file>
+    <name>"database"</name>
+    <operation>
+          <action>"sql"</action>
+          <data><![CDATA[CREATE TABLE `{$db_prefix}rules` (
+  `id` int(11) NOT NULL auto_increment,
+  `text` text NOT NULL,
+  `active` enum('-1','0','1') NOT NULL default '1',
+  `sort_index` int(11) NOT NULL default '0',
+  `cat_id` int(11) NOT NULL,
+  PRIMARY KEY  (`id`)
+) TYPE=MyISAM;]]></data>
+    </operation>
+    <operation>
+            <action>"sql"</action>
+            <data><![CDATA[CREATE TABLE `{$db_prefix}rules_group` (
+  `id` int(11) NOT NULL auto_increment,
+  `active` enum('-1','0','1') NOT NULL default '1',
+  `title` varchar(255) NOT NULL,
+  `sort_index` int(11) NOT NULL default '0',
+  PRIMARY KEY  (`id`)
+) TYPE=MyISAM;]]></data>
+     </operation>
+  </file>
+  <!-- End with sql -->
+  
+  <!-- Start with editing index.php -->
+  <file>
+    <name>"$DEFAULT_ROOT/index.php"</name>
+    <operation>
+              <search><![CDATA[case 'index':]]></search>
+          <action>"add"</action>
+          <data><![CDATA[
+    /*Mod by losmi - rules mod*/
+      case 'rules':
+        require("$THIS_BASEPATH/rules.php");
+        $tpl->set("main_content",set_block($language["RULES"],"center",$rulestpl->fetch(load_template("rules.tpl"))));
+        $tpl->set("main_title",$btit_settings["name"]." .::. "."Index->Rules");
+        break;
+    /*End mod by losmi rules - mod*/
+    ]]></data>
+          <where>"before"</where>
+    </operation>
+  </file>
+  <!-- End with editing index.php -->
+  
+  <!-- Start edit functions.php -->
+  <file>
+    <name>"$DEFAULT_ROOT/include/functions.php"</name>
+    <operation>
+      <search><![CDATA[function load_css($css_name)]]></search>
+      <action>"add"</action>
+      <data><![CDATA[
+/*Mod by losmi -  rules mod */
+function genrelistrules($append='',$table='rules')
+     {
+
+     global $TABLE_PREFIX;
+
+    $ret = array();
+    $res = do_sqlquery("SELECT * FROM {$TABLE_PREFIX}$table WHERE active != '-1' ".$append." ORDER BY sort_index");
+
+    while ($row = mysql_fetch_assoc($res))
+        $ret[] = $row;
+
+    unset($row);
+    mysql_free_result($res);
+
+    return $ret;
+}
+/*End mod by losmi - rules mod*/
+]]></data>
+      <where>"before"</where>
+    </operation>
+  </file>
+  <!-- End edit functions.php -->
+  
+   <!-- Start edit mainmenu_block.php -->
+  <file>
+    <name>"$DEFAULT_ROOT/blocks/mainmenu_block.php"</name>
+    <operation>
+      <search><![CDATA[print("<td class=\"header\" align=\"center\"><a href=\"index.php?page=extra-stats\">".$language["MNU_STATS"]."</a></td>\n");]]></search>
+      <action>"add"</action>
+      <data><![CDATA[
+/*Mod by losmi -  rules mod */
+ print("<td class=\"header\" align=\"center\"><a href=\"index.php?page=rules\">".$language["MNU_RULES"]."</a></td>\n");
+   
+/*End mod by losmi -  rules mod*/
+]]></data>
+      <where>"after"</where>
+    </operation>
+  </file>
+  <!-- End edit mainmenu_block.php -->
+  
+  <!-- Start edit lang_main.tpl -->
+  
+  <file>
+    <name>"$DEFAULT_LANGUAGE_PATH/lang_main.php"</name>
+    <operation>
+     <search><![CDATA[$language["MODULE_LOAD_ERROR"]="The module required seems to be wrong!";]]></search>
+      <action>"add"</action>
+      <data><![CDATA[
+//RULES
+$language["RULES_SORT"]="Rule num(sort)";
+$language["RULES"]="Rules";
+$language["RULE"]="Rule";
+$language["RULE_ALL"]="All rules";
+$language["MNU_RULES"]="Rules";
+$language["RULES_ADD"]="Insert rule";
+]]></data>
+      <where>"after"</where>
+    </operation>
+  </file>
+  <!-- End edit lang_mainphp -->
+  <file>
+    <name>"$DEFAULT_LANGUAGE_PATH/lang_admin.php"</name>
+    <operation>
+     <search><![CDATA[$language["ACP_BAN_IP"]="Ban IPs";]]></search>
+      <action>"add"</action>
+      <data><![CDATA[
+//RULES
+$language["ACP_RULES_GROUP"]="Rules groups";
+$language["ACP_RULES"]="Rules";
+]]></data>
+      <where>"after"</where>
+    </operation>
+  </file>
+  <!-- End edit lang_mainphp -->
+  
+  <!-- Start edit admin.menu.php -->
+  <file>
+    <name>"$DEFAULT_ROOT/admin/admin.menu.php"</name>
+    <operation>
+     <search><![CDATA[3=>array(
+                    "url"=>"index.php?page=admin&amp;user=".$CURUSER["uid"]."&amp;code=".$CURUSER["random"]."&amp;do=blocks&amp;action=read" ,
+                    "description"=>$language["ACP_BLOCKS"])]]></search>
+      <action>"add"</action>
+      <data><![CDATA[,
+                    4=>array(
+                    "url"=>"index.php?page=admin&amp;user=".$CURUSER["uid"]."&amp;code=".$CURUSER["random"]."&amp;do=rules_cat" ,
+                    "description"=>$language["ACP_RULES_GROUP"]),
+                    5=>array(
+                    "url"=>"index.php?page=admin&amp;user=".$CURUSER["uid"]."&amp;code=".$CURUSER["random"]."&amp;do=rules" ,
+                    "description"=>$language["ACP_RULES"])
+                    ]]></data>
+    </operation>
+    <where>"after"</where>
+  </file>
+  <!-- End edit admin.menu.php -->
+  
+   <!-- Start edit admin.index.php -->
+  <file>
+    <name>"$DEFAULT_ROOT/admin/admin.index.php"</name>
+    <operation>
+     <search><![CDATA[switch ($do)
+    {]]></search>
+      <action>"add"</action>
+      <data><![CDATA[
+      /*Mod by losmi - rules*/
+     case 'rules':
+      include("$ADMIN_PATH/admin.rules.php");
+      $tpl->set("main_content",set_block($language["ACP_RULES"],"center",$admintpl->fetch(load_template("admin.rules.tpl"))));
+      break;
+     case 'rules_cat':
+      include("$ADMIN_PATH/admin.rules.categories.php");
+      $tpl->set("main_content",set_block($language["ACP_RULES_GROUP"],"center",$admintpl->fetch(load_template("admin.rules.categories.tpl"))));
+      break;
+      /*End mod by losmi - rules*/
+]]></data>
+      <where>"after"</where>
+    </operation>
+  </file>
+  
+  <!-- End edit admin.index.php -->
+    <!-- Copy some admin files-->
+   <file>
+  <name>"$CURRENT_FOLDER/tocopy/admin.rules.categories.php"</name>
+    <operation>
+      <action>"copy"</action>
+      <where>"$DEFAULT_ROOT/admin"</where>
+      <data>"admin.rules.categories.php"</data>
+    </operation>
+  </file>
+
+  <file>
+  <name>"$CURRENT_FOLDER/tocopy/rules.php"</name>
+    <operation>
+      <action>"copy"</action>
+      <where>"$DEFAULT_ROOT"</where>
+      <data>"rules.php"</data>
+    </operation>
+  </file>
+  <file>
+  <name>"$CURRENT_FOLDER/tocopy/admin.rules.php"</name>
+    <operation>
+      <action>"copy"</action>
+      <where>"$DEFAULT_ROOT/admin"</where>
+      <data>"admin.rules.php"</data>
+    </operation>
+  </file>
+  <file>
+  <name>"$CURRENT_FOLDER/tocopy/admin.rules.tpl"</name>
+    <operation>
+      <action>"copy"</action>
+      <where>"$DEFAULT_STYLE_PATH"</where>
+      <data>"admin.rules.tpl"</data>
+    </operation>
+  </file>
+  <file>
+  <name>"$CURRENT_FOLDER/tocopy/admin.rules.categories.tpl"</name>
+    <operation>
+      <action>"copy"</action>
+      <where>"$DEFAULT_STYLE_PATH"</where>
+      <data>"admin.rules.categories.tpl"</data>
+    </operation>
+  </file>
+  <file>
+  <name>"$CURRENT_FOLDER/tocopy/rules.tpl"</name>
+    <operation>
+      <action>"copy"</action>
+      <where>"$DEFAULT_STYLE_PATH"</where>
+      <data>"rules.tpl"</data>
+    </operation>
+  </file>
+  
+</hack>
+
+  

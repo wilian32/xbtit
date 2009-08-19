@@ -1,0 +1,34 @@
+<hack>
+	<title>Allow Video Post by dadohannibal</title>
+	<author>JBoy</author>
+	<version>1.0</version>
+
+	<!-- include/functions.php -->
+	<file>
+		<name>"$DEFAULT_ROOT/include/functions.php"</name>
+		<operation>
+			<search><![CDATA[    // [url]http://www.example.com[/url]
+    $s = preg_replace(
+        "/\[url\]((http|ftp|https|ftps|irc):\/\/[^<>\s]+?)\[\/url\]/i",
+        "<a href='\\1' target='_blank'>\\1</a>", $s);]]></search>
+			<action>"add"</action>
+			<data><![CDATA[	// YouTube Vids
+	$s = preg_replace("/\[video=[^\s'\"<>]*youtube.*.*v=([^\s'\"<>]+)\]/ims", "<object width=\"500\" height=\"410\"><param name=\"movie\" value=\"http://www.youtube.com/v/\\1\"></param><embed src=\"http://www.youtube.com/v/\\1\" type=\"application/x-shockwave-flash\" width=\"500\" height=\"410\"></embed></object>", $s);
+	// Google Vids
+	$s = preg_replace("/\[video=[^\s'\"<>]*video.google.*.*docid=(-?[0-9]+).*\]/ims", "<embed style=\"width:500px; height:410px;\" id=\"VideoPlayback\" align=\"middle\" type=\"application/x-shockwave-flash\" src=\"http://video.google.com/googleplayer.swf?docId=\\1\" allowScriptAccess=\"sameDomain\" quality=\"best\" bgcolor=\"#ffffff\" scale=\"noScale\" wmode=\"window\" salign=\"TL\" FlashVars=\"playerMode=embedded\"> </embed>", $s);]]></data>
+			<where>"after"</where>
+		</operation>
+	</file>
+	
+	<!-- style/textbbcode.tpl -->
+	<file>
+		<name>"$DEFAULT_STYLE_PATH/txtbbcode.tpl"</name>
+		<operation>
+			<search><![CDATA[        <td align="left"><input type="button" class="btn" name="img" value="Img" onclick="javascript: BBTag('[img]','[/img]',document.forms.<tag:form_name />.<tag:object_name />)" /></td>]]></search>
+			<action>"add"</action>
+			<data><![CDATA[        <td align="left"><input type="button" class="btn" name="video" value="Video" onclick="javascript: BBTag('[video=',']',document.forms.<tag:form_name />.<tag:object_name />)" /></td>]]></data>
+			<where>"after"</where>
+		</operation>
+	</file>
+
+</hack>

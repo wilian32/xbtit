@@ -1,0 +1,214 @@
+<hack>
+<title>Moderation</title>
+<author>Author: gH0StArthour | Conversion by Laurianti</author>
+<version>1.0</version>
+
+<file>
+<name>"$DEFAULT_ROOT/details.php"</name>
+
+<operation>
+<search><![CDATA[$res = get_result("SELECT f.info_hash, f.filename, f.url, UNIX_TIMESTAMP(f.data) as data, f.size, f.comment, f.uploader, c.name as cat_name, $tseeds, $tleechs, $tcompletes, f.speed, f.external, f.announce_url,UNIX_TIMESTAMP(f.lastupdate) as lastupdate,UNIX_TIMESTAMP(f.lastsuccess) as lastsuccess, f.anonymous, u.username FROM $ttables LEFT JOIN {$TABLE_PREFIX}categories c ON c.id=f.category LEFT JOIN {$TABLE_PREFIX}users u ON u.id=f.uploader WHERE f.info_hash ='" . $id . "'",true);]]></search>
+<action>"replace"</action>
+<data><![CDATA[$res = get_result("SELECT moder, f.info_hash, f.filename, f.url, UNIX_TIMESTAMP(f.data) as data, f.size, f.comment, f.uploader, c.name as cat_name, $tseeds, $tleechs, $tcompletes, f.speed, f.external, f.announce_url,UNIX_TIMESTAMP(f.lastupdate) as lastupdate,UNIX_TIMESTAMP(f.lastsuccess) as lastsuccess, f.anonymous, u.username FROM $ttables LEFT JOIN {$TABLE_PREFIX}categories c ON c.id=f.category LEFT JOIN {$TABLE_PREFIX}users u ON u.id=f.uploader WHERE f.info_hash ='" . $id . "'",true);]]></data>
+</operation>
+
+<operation>
+<search><![CDATA[$row["speed"]=$speed;]]></search>
+<action>"add"</action>
+<where>"after"</where>
+<data><![CDATA[$moder=$row["moder"];
+if ($CURUSER['edit_torrents']=="yes")
+$row["moderation"].="<a title=\"".$moder."\" href=\"index.php?page=edit&info_hash=".$row["info_hash"]."\">";
+$row["moderation"].="<img alt=\"".$moder."\" src=\"images/mod/".$moder.".png\">";
+if ($CURUSER['edit_torrents']=="yes")
+$row["moderation"].="</a>";]]></data>
+</operation>
+
+</file>
+
+<file>
+<name>"$DEFAULT_STYLE_PATH/torrent.details.tpl"</name>
+
+<operation>
+<search><![CDATA[<td class="lista" align="center"><tag:torrent.filename /></td>
+        </tr>]]></search>
+<action>"add"</action>
+<where>"after"</where>
+<data><![CDATA[<tr>
+<td align="right" class="header">Moderation</td>
+<td class="lista" align="center"><tag:torrent.moderation /></td>
+</tr>]]></data>
+</operation>
+
+</file>
+
+<file>
+<name>"$DEFAULT_ROOT/edit.php"</name>
+
+<operation>
+<search><![CDATA[$torrent["cat_combo"]= categories($results["cat_name"]);]]></search>
+<action>"add"</action>
+<where>"after"</where>
+<data><![CDATA[$moder=$results["moder"];
+if ($CURUSER['edit_torrents']=="yes")
+{
+switch ($moder)
+{
+case 'ok':
+$checked1="SELECTED";
+break;
+case 'bad':
+$checked2="SELECTED";
+break;
+case 'um':
+$checked3="SELECTED";
+break;
+}
+
+$torrent["moder"]="<select name=\"moder\" id=\"icon\" onchange=\"showimage()\">
+										<option $checked1 value=\"ok\">Ok</option>
+										<option $checked2 value=\"bad\">Bad</option>
+										<option $checked3 value=\"um\">Unmoderated</option>
+									</select> ";
+}
+
+$torrent["moder"].="<img name=\"icons\" src=\"images/mod/$moder.png\" alt=\"$moder\" title=\"$moder\">";]]></data>
+</operation>
+
+<operation>
+<search><![CDATA[$query ="SELECT f.info_hash, f.filename, f.url, UNIX_TIMESTAMP(f.data) as data, f.size, f.comment, f.category as cat_name, $tseeds, $tleechs, $tcompletes, f.speed, f.uploader FROM $ttables WHERE f.info_hash ='" . AddSlashes($_GET["info_hash"]) . "'";]]></search>
+<action>"replace"</action>
+<data><![CDATA[$query ="SELECT moder, f.info_hash, f.filename, f.url, UNIX_TIMESTAMP(f.data) as data, f.size, f.comment, f.category as cat_name, $tseeds, $tleechs, $tcompletes, f.speed, f.uploader FROM $ttables WHERE f.info_hash ='" . AddSlashes($_GET["info_hash"]) . "'";]]></data>
+</operation>
+
+<operation>
+      <search><![CDATA[do_sqlquery("UPDATE {$TABLE_PREFIX}files SET filename='$fname', comment='" . AddSlashes($_POST["comment"]) . "', category=" . intval($_POST["category"]) . " WHERE info_hash='" . $torhash . "'",true);]]></search>
+      <action>"replace"</action>
+      <data><![CDATA[do_sqlquery("UPDATE {$TABLE_PREFIX}files SET filename='$fname', comment='" . AddSlashes($_POST["comment"]) . "', moder='".$_POST['moder']."', category=" . intval($_POST["category"]) . " WHERE info_hash='" . $torhash . "'",true);]]></data>
+</operation>
+
+</file>
+
+<file>
+<name>"$DEFAULT_STYLE_PATH/torrent.edit.tpl"</name>
+
+<operation>
+<search><![CDATA[<form action="<tag:torrent.link />" method="post" name="edit">]]></search>
+<action>"replace"</action>
+<data><![CDATA[<form id="postmodify" action="<tag:torrent.link />" method="post" name="edit">]]></data>
+</operation>
+
+<operation>
+<search><![CDATA[<td class="header" ><tag:language.CATEGORY_FULL /></td>
+        <td class="lista"><tag:torrent.cat_combo /></td>
+      </tr>]]></search>
+<action>"add"</action>
+<where>"after"</where>
+<data><![CDATA[	<script language="JavaScript" type="text/javascript">
+	var icon_urls = {
+	"ok": "images/mod/ok.png",
+	"bad": "images/mod/bad.png",
+	"um": "images/mod/um.png",
+	};
+	function showimage()
+	{
+	document.images.icons.src = icon_urls[document.forms.postmodify.icon.options[document.forms.postmodify.icon.selectedIndex].value];
+	}
+	</script>
+
+      <tr>
+        <td class="header">Moderation</td>
+        <td class="lista"><tag:torrent.moder /></td>
+      </tr>]]></data>
+</operation>
+
+</file>
+
+<file>
+<name>"$DEFAULT_ROOT/torrents.php"</name>
+<operation>
+<search><![CDATA[$torrents[$i]["category"]]]></search>
+<action>"add"</action>
+<where>"before"</where>
+<data><![CDATA[if ($CURUSER['edit_torrents']=="yes")
+$torrents[$i]["moder"].="<a title=\"".$data["moder"]."\" href=\"index.php?page=edit&info_hash=".$data["hash"]."\">";
+$torrents[$i]["moder"].="<img alt=\"".$data["moder"]."\" src=\"images/mod/".$data["moder"].".png\">";
+if ($CURUSER['edit_torrents']=="yes")
+$torrents[$i]["moder"].="</a>";]]></data>
+</operation>
+
+<operation>
+<search><![CDATA[$query = "SELECT f.info_hash as hash, $tseeds as seeds, $tleechs as leechers, $tcompletes as finished,  f.dlbytes as dwned , IFNULL(f.filename,'') AS filename, f.url, f.info, f.anonymous, f.speed, UNIX_TIMESTAMP( f.data ) as added, c.image, c.name as cname, f.category as catid, f.size, f.external, f.uploader as upname, u.username as uploader, prefixcolor, suffixcolor FROM $ttables LEFT JOIN {$TABLE_PREFIX}categories c ON c.id = f.category LEFT JOIN {$TABLE_PREFIX}users u ON u.id = f.uploader LEFT JOIN {$TABLE_PREFIX}users_level ul ON u.id_level=ul.id $where ORDER BY $qry_order $by $limit";]]></search>
+<action>"replace"</action>
+<data><![CDATA[$query = "SELECT moder, f.info_hash as hash, $tseeds as seeds, $tleechs as leechers, $tcompletes as finished,  f.dlbytes as dwned , IFNULL(f.filename,'') AS filename, f.url, f.info, f.anonymous, f.speed, UNIX_TIMESTAMP( f.data ) as added, c.image, c.name as cname, f.category as catid, f.size, f.external, f.uploader as upname, u.username as uploader, prefixcolor, suffixcolor FROM $ttables LEFT JOIN {$TABLE_PREFIX}categories c ON c.id = f.category LEFT JOIN {$TABLE_PREFIX}users u ON u.id = f.uploader LEFT JOIN {$TABLE_PREFIX}users_level ul ON u.id_level=ul.id $where ORDER BY $qry_order $by $limit";]]></data>
+</operation>
+
+<operation>
+<search><![CDATA[$query = "SELECT f.info_hash as hash, $tseeds as seeds, $tleechs as leechers, $tcompletes as finished,  f.dlbytes as dwned , IFNULL(f.filename,'') AS filename, f.url, f.info, f.speed, UNIX_TIMESTAMP( f.data ) as added, c.image, c.name as cname, f.category as catid, f.size, f.external, f.uploader FROM $ttables LEFT JOIN {$TABLE_PREFIX}categories c ON c.id = f.category $where ORDER BY $qry_order $by $limit";]]></search>
+<action>"replace"</action>
+<data><![CDATA[$query = "SELECT moder, f.info_hash as hash, $tseeds as seeds, $tleechs as leechers, $tcompletes as finished,  f.dlbytes as dwned , IFNULL(f.filename,'') AS filename, f.url, f.info, f.speed, UNIX_TIMESTAMP( f.data ) as added, c.image, c.name as cname, f.category as catid, f.size, f.external, f.uploader FROM $ttables LEFT JOIN {$TABLE_PREFIX}categories c ON c.id = f.category $where ORDER BY $qry_order $by $limit";]]></data>
+</operation>
+
+</file>
+
+<file>
+<name>"$DEFAULT_STYLE_PATH/torrent.list.tpl"</name>
+
+<operation>
+<search><![CDATA[<td align="center" width="45" class="header"><tag:torrent_header_category /></td>]]></search>
+<action>"add"</action>
+<where>"before"</where>
+<data><![CDATA[<td align="center" width="45" class="header">Moderation</td>]]></data>
+</operation>
+
+<operation>
+<search><![CDATA[<td align="center" width="45" class="lista" style="text-align: center;"><tag:torrents[].category /></td>]]></search>
+<action>"add"</action>
+<where>"before"</where>
+<data><![CDATA[<td align="center" width="45" class="lista" style="text-align: center;"><tag:torrents[].moder /></td>]]></data>
+</operation>
+
+</file>
+
+<file>
+<name>"database"</name>
+<operation>
+<action>"sql"</action>
+<data><![CDATA[ALTER TABLE `{$db_prefix}files` ADD `moder` ENUM('um', 'bad', 'ok') NOT NULL DEFAULT 'um';]]></data>
+</operation>
+</file>
+
+<file>
+<name>"$CURRENT_FOLDER/mod/ok.png"</name>
+
+<operation>
+<action>"copy"</action>
+<where>"$DEFAULT_ROOT/images/mod"</where>
+<data>"ok.png"</data>
+</operation>
+
+</file>
+
+<file>
+<name>"$CURRENT_FOLDER/mod/bad.png"</name>
+
+<operation>
+<action>"copy"</action>
+<where>"$DEFAULT_ROOT/images/mod"</where>
+<data>"bad.png"</data>
+</operation>
+
+</file>
+
+<file>
+<name>"$CURRENT_FOLDER/mod/um.png"</name>
+
+<operation>
+<action>"copy"</action>
+<where>"$DEFAULT_ROOT/images/mod"</where>
+<data>"um.png"</data>
+</operation>
+
+</file>
+
+</hack>

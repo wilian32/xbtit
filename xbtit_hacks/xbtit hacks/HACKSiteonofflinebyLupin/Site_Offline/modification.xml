@@ -1,0 +1,164 @@
+<hack>
+  <title>Site On/Offline</title>
+  <author>Lupin</author>
+  <version>1.0</version>
+
+  <!-- admin.index.php -->
+  <file>
+    <name>"$DEFAULT_ROOT/admin/admin.index.php"</name>
+    <operation>
+      <search><![CDATA[case 'language':]]></search>
+      <action>"add"</action>
+      <where>"before"</where>
+      <data><![CDATA[
+    case 'offline':
+      include("$ADMIN_PATH/admin.offline.php");
+      $tpl->set("main_content",set_block($language["ACP_OFFLINE"],"center",$admintpl->fetch(load_template("admin.offline.tpl"))));
+      break;
+      ]]></data>
+    </operation>
+  </file>
+
+  <!-- admin.menu.php -->
+  <file>
+    <name>"$DEFAULT_ROOT/admin/admin.menu.php"</name>
+    <operation>
+      <search><![CDATA[3=>array(
+                    "url"=>"index.php?page=admin&amp;user=".$CURUSER["uid"]."&amp;code=".$CURUSER["random"]."&amp;do=style&amp;action=read" ,
+                    "description"=>$language["ACP_STYLES"])]]></search>
+      <action>"replace"</action>
+      <data><![CDATA[3=>array(
+                    "url"=>"index.php?page=admin&amp;user=".$CURUSER["uid"]."&amp;code=".$CURUSER["random"]."&amp;do=style&amp;action=read" ,
+                    "description"=>$language["ACP_STYLES"]),
+                          4=>array(
+                    "url"=>"index.php?page=admin&amp;user=".$CURUSER["uid"]."&amp;code=".$CURUSER["random"]."&amp;do=offline" ,
+                    "description"=>$language["ACP_OFFLINE"])
+      ]]></data>
+    </operation>
+  </file>
+
+  <!-- admin.offline.php -->
+  <file>
+    <name>"$CURRENT_FOLDER/toCopy/admin.offline.php"</name>
+    <operation>
+    <action>"copy"</action>
+    <where>"$DEFAULT_ROOT/admin"</where>
+    <data>"admin.offline.php"</data>
+  </file>
+
+  <!-- admin.offline.php -->
+  <file>
+    <name>"$CURRENT_FOLDER/toCopy/admin.offline.tpl"</name>
+    <operation>
+    <action>"copy"</action>
+    <where>"$DEFAULT_STYLE_PATH"</where>
+    <data>"admin.offline.tpl"</data>
+  </file>
+
+  <!-- functions.php -->
+  <file>
+    <name>"$DEFAULT_ROOT/include/functions.php"</name>
+    <operation>
+      <search><![CDATA[global $CURUSER, $TABLE_PREFIX, $err_msg_install;]]></search>
+      <action>"replace"</action>
+      <data><![CDATA[
+    global $CURUSER, $TABLE_PREFIX, $err_msg_install, $btit_settings;
+      ]]></data>
+    </operation>
+    <operation>
+      <search><![CDATA[else
+         $err_msg_install="";]]></search>
+      <action>"add"</action>
+      <where>"before"</where>
+      <data><![CDATA[
+    elseif ($btit_settings["site_offline"] && $row["id_level"]==8)
+         $err_msg_install=("<div align=\"center\" style=\"color:red; font-size:12pt; font-weight: bold;\">REMEMBER: ".$btit_settings["name"]." is currently offline.</div>");
+      ]]></data>
+    </operation>
+  </file>
+
+  <!-- lang_admin.php -->
+  <file>
+    <name>"$DEFAULT_LANGUAGE_PATH/lang_admin.php"</name>
+    <operation>
+      <search><![CDATA[?>]]></search>
+      <action>"add"</action>
+      <where>"before"</where>
+      <data><![CDATA[
+$language["ACP_OFFLINE"]="Offline Settings";
+$language["OFFLINE_SETTING"]="Site is Offline?";
+$language["OFFLINE_MESSAGE"]="Offline message to users (max 200 chars, only admin could access offline site)";
+      ]]></data>
+    </operation>
+  </file>
+
+  <!-- login.tpl -->
+  <file>
+    <name>"$DEFAULT_STYLE_PATH/login.tpl"</name>
+    <operation>
+      <search><![CDATA[</if:FALSE_PASSWORD>]]></search>
+      <action>"add"</action>
+      <where>"after"</where>
+      <data><![CDATA[
+    <if:SITE_OFFLINE>
+    <tr>
+      <td class="lista" colspan="2" style="text-align:center; font-size:12pt;"><span style="color:#FF0000;"><tag:offline_msg /></span></td>
+    </tr>
+    </if:SITE_OFFLINE>
+      ]]></data>
+    </operation>
+  </file>
+
+  <!-- index.php -->
+  <file>
+    <name>"$DEFAULT_ROOT/index.php"</name>
+    <operation>
+      <search><![CDATA[if ($left_col=="" && $right_col=="")
+   $no_columns=1;
+]]></search>
+      <action>replace</action>
+      <data><![CDATA[if (($left_col=="" && $right_col=="") || $btit_settings["site_offline"])
+   $no_columns=1;
+]]></data>
+    </operation>
+    <operation>
+      <search><![CDATA[// assign main content
+switch ($pageID) {
+]]></search>
+      <action>add</action>
+      <where>before</where>
+      <data><![CDATA[
+if ($btit_settings["site_offline"] && $CURUSER["id"]>1 && $CURUSER["admin_access"]!="yes")
+  stderr($language["SORRY"],$btit_settings["offline_msg"]);
+elseif ($btit_settings["site_offline"] && $CURUSER["id"]==1)
+  $pageID="login";
+
+]]></data>
+    </operation>
+  </file>
+
+  <!-- login.php -->
+  <file>
+    <name>"$DEFAULT_ROOT/login.php"</name>
+    <operation>
+      <search><![CDATA[global $language, $logintpl;]]></search>
+      <action>replace</action>
+      <data><![CDATA[global $language, $logintpl, $btit_settings;]]></data>
+    </operation>
+    <operation>
+      <search><![CDATA[$logintpl->set("login",$login);]]></search>
+      <action>add</action>
+      <where>after</where>
+      <data><![CDATA[
+    if ($btit_settings["site_offline"])
+        {
+          $logintpl->set("SITE_OFFLINE",true,true);
+          $logintpl->set("offline_msg",$btit_settings["offline_msg"]);
+        }
+    else
+      $logintpl->set("SITE_OFFLINE",false,true);
+]]></data>
+    </operation>
+  </file>
+
+</hack>

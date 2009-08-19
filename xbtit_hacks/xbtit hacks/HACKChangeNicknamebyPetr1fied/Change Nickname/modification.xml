@@ -1,0 +1,75 @@
+<hack>
+  <title>Change Nickname</title>
+  <author>Petr1fied</author>
+  <version>1.1</version>
+  <file>
+    <name>"$DEFAULT_ROOT/user/usercp.index.php"</name>
+    <operation>
+      <search><![CDATA[    $tpl->set("main_content",set_block($language["CHANGE_PID"],"center",$usercptpl->fetch(load_template("usercp.pidchange.tpl"))));
+    break;]]></search>
+      <action>"add"</action>
+      <where>"after"</where>
+      <data><![CDATA[    case 'rename':
+    include("$USER_PATH/usercp.rename.php");
+    $tpl->set("main_content",set_block($language["MNU_UCP_RENAME"],"center",$usercptpl->fetch(load_template("usercp.rename.tpl"))));
+    break;]]></data>
+    </operation>
+  </file>
+  <file>
+    <name>"$DEFAULT_ROOT/user/usercp.menu.php"</name>
+    <operation>
+      <search><![CDATA["description"=>$language["CHANGE_PID"]),]]></search>
+      <action>"add"</action>
+      <where>"after"</where>
+      <data><![CDATA[                      3=>array(
+                "url"=>"index.php?page=usercp&amp;do=rename&amp;action=change&amp;uid=".$uid."" ,
+                "description"=>$language["CHANGE_NICKNAME"]),]]></data>
+    </operation>
+  </file>
+  <file>
+    <name>"$DEFAULT_ROOT/language/english/lang_usercp.php"</name>
+    <operation>
+      <search><![CDATA[$language["ERR_PM_GUEST"]="Sorry you can't send PM to guest or to yourself!";]]></search>
+      <action>"add"</action>
+      <where>"after"</where>
+      <data><![CDATA[$language["MNU_UCP_RENAME"]="Change nickname";
+$language["CURR_NICK"]="Current nickname";
+$language["NEW_NICK"]="New nickname";
+$language["REPEAT_NICK"]="Repeat new nickname";
+$language["ERR_NICK_NO_MATCH"]="Nicknames don't match";
+$language["ERR_SAME_NICK"]="Your nickname is already";
+$language["ERR_NICK_TOO_SMALL"]="Your new nickname must be at least 3 characters in length";
+$language["ERR_NICK_NOT_ALLOWED"]="This nickname is not permitted to be used";
+$language["NICK_CHANGE_SUCCESS"]="You have successfully changed your nickname to ";
+$language["CHANGED_THEIR_NICK"]="Changed their nickname to ";
+$language["CHANGE_NICKNAME"]="Change Nickname";]]></data>
+    </operation>
+  </file>
+
+
+  <!-- other file, it will be copied from current position to (where) -->
+  <file>
+
+    <name>"$CURRENT_FOLDER/toCopy/usercp.rename.tpl"</name>
+    <operation>
+      <action>"copy"</action>
+      <where>"$DEFAULT_ROOT/style/xbtit_default"</where>
+      <data>"usercp.rename.tpl"</data>
+    </operation>
+
+  </file>
+
+  <!-- other file, it will be copied from current position to (where) -->
+  <file>
+
+    <name>"$CURRENT_FOLDER/toCopy/usercp.rename.php"</name>
+    <operation>
+      <action>"copy"</action>
+      <where>"$DEFAULT_ROOT/user"</where>
+      <data>"usercp.rename.php"</data>
+    </operation>
+
+  </file>
+
+
+</hack>

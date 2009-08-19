@@ -1,0 +1,29 @@
+Note: Also read the readme file because some forums might need to be changed a bit
+
+v0.4.3 - 2008.05.11 - Buf Fixes Part 3
+FIXED   - Broken installer on newer versions of SMF
+FEATURE - Use <img src="picture_url"> on Tracker Stats admin page for images (thanks to: HuRRR)
+
+v0.4.2 - 2008.05.04 - Bug Fixes Part 2
+FIXED   - A version/package conflict on ModSettings...
+
+v0.4.1 - 2008.04.25 - Bug Fixes Part 1
+FIXED   - "Tracker" now used instead of "Traker" in various files (thanks to: Liroy)
+ADDED   - Default config upon install
+
+v0.4.0 - 2008.04.24 - Updates and Features
+REVAMP  - Ported to SMF packaging system
+FIXED   - An error with $PREFIX_TABLE variable
+ADDED   - Admin Page to change stuff
+FEATURE - Tracker/Upload/Download/Ratio vars for a full customize (NOTE: Images not supported)
+FEATURE - Enabled/Disable checkbox in admin to completely disable the mod
+ADDED   - CSS class for tracker and stats in style.css file of each theme
+
+v0.3.0 - 2008.04.22 - Initial Release
+OPTIM   - Minimizes XBTT backend check to once per page per user
+ADDED   - Total Upload, Download and Ratio to every post beneath "Posts:"
+ADDED   - A replica of the xbtit function makesize to smf, to show accurate results
+ADDED   - CSS classes for upload/downloaded/ratio in the style.css file of each theme
+FEATURE - works with smf on a different server than xbtit (installer not yet fixed)
+
+v0.1-v0.2 - Development Stage

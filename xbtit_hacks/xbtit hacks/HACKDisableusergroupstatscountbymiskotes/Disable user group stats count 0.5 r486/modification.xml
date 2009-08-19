@@ -1,0 +1,359 @@
+<hack>
+
+  <title>Disable user group stats count</title>
+  <author>miskotes</author>
+  <version>0.5 r486</version>
+
+  <!-- database -->
+	<file>
+		<name>"database"</name>
+		<operation>
+			<action>"sql"</action>
+			<data><![CDATA[ALTER TABLE `{$db_prefix}users_level` ADD `sfdownload` text NOT NULL AFTER `can_download`;]]></data>
+		</operation>
+		<operation>
+			<action>"sql"</action>
+			<data><![CDATA[ALTER TABLE `{$db_prefix}users_level` ADD `sfupload` text NOT NULL AFTER `sfdownload`;]]></data>
+		</operation>
+	</file>
+
+
+  <file>
+    <name>"$DEFAULT_ROOT/announce.php"</name>
+    
+    
+   <operation>
+      <search><![CDATA[  $respid = mysql_query("SELECT u.*, level, can_download, WT FROM {$TABLE_PREFIX}users u INNER JOIN {$TABLE_PREFIX}users_level ul on u.id_level=ul.id WHERE pid='".$pid."' LIMIT 1");]]></search>
+      <action>replace</action>
+      <data>
+
+	<![CDATA[
+
+    #######################################################
+    # Disable user group stats count
+
+  $respid = mysql_query("SELECT u.*, level, sfdownload, sfupload, can_download, WT FROM {$TABLE_PREFIX}users u INNER JOIN {$TABLE_PREFIX}users_level ul on u.id_level=ul.id WHERE pid='".$pid."' LIMIT 1");
+
+    # End
+    #######################################################     
+
+
+	]]>
+
+	</data>
+    </operation>
+
+    <operation>
+      <search><![CDATA[  else
+      {
+      $rowpid=mysql_fetch_assoc($respid);]]></search>
+      <action>"add"</action>
+      <where>"after"</where>
+      <data>
+
+	<![CDATA[
+
+    #######################################################
+    # Disable user group stats count
+        
+      if ($rowpid["sfdownload"]=="no")
+          $sfdownloaded = 0;
+      else
+          $sfdownloaded = (float)($_GET["downloaded"]);
+          
+
+      if ($rowpid["sfupload"]=="no")
+          $sfuploaded = 0;
+      else
+          $sfuploaded = (float)($_GET["uploaded"]);      
+          
+    # End
+    #######################################################        
+
+	]]>
+
+	</data>
+
+    </operation>
+
+
+    <operation>
+      <search><![CDATA[               $newup=max(0,($uploaded-$livestat["uploaded"]));]]></search>
+      <action>replace</action>
+      <data>
+
+	<![CDATA[
+
+    #######################################################
+    # Disable user group stats count
+    
+               $newup=max(0,($sfuploaded-$livestat["uploaded"]));
+
+    # End
+    #######################################################     
+
+
+	]]>
+
+	</data>
+    </operation>
+
+    <operation>
+      <search><![CDATA[               $newdown=max(0,($downloaded-$livestat["downloaded"]));]]></search>
+      <action>replace</action>
+      <data>
+
+	<![CDATA[
+
+    #######################################################
+    # Disable user group stats count
+    
+               $newdown=max(0,($sfdownloaded-$livestat["downloaded"]));
+
+    # End
+    #######################################################     
+
+
+	]]>
+
+	</data>
+    </operation>
+
+    <operation>
+      <search><![CDATA[            @mysql_query("UPDATE {$TABLE_PREFIX}users SET uploaded=IFNULL(uploaded,0)+$uploaded, downloaded=IFNULL(downloaded,0)+$downloaded WHERE ".($PRIVATE_ANNOUNCE?"pid='$pid'":"cip='$ip'")." AND id>1 LIMIT 1");]]></search>
+      <action>replace</action>
+      <data>
+
+	<![CDATA[
+
+    #######################################################
+    # Disable user group stats count
+
+            @mysql_query("UPDATE {$TABLE_PREFIX}users SET uploaded=IFNULL(uploaded,0)+$sfuploaded, downloaded=IFNULL(downloaded,0)+$sfdownloaded WHERE ".($PRIVATE_ANNOUNCE?"pid='$pid'":"cip='$ip'")." AND id>1 LIMIT 1");
+
+    # End
+    #######################################################     
+
+
+	]]>
+
+	</data>
+    </operation>
+
+
+  </file>
+
+
+  <file>
+    <name>"$DEFAULT_ROOT/admin/admin.groups.php"</name>
+
+    <operation>
+      <search><![CDATA[          $current_group["can_download"]=($current_group["can_download"]=="yes"?"checked=\"checked\"":"");]]></search>
+      <action>"add"</action>
+      <where>"after"</where>
+      <data>
+
+	<![CDATA[
+
+    #######################################################
+    # Disable user group stats count
+        
+          $current_group["sfdownload"]=($current_group["sfdownload"]=="no"?"checked=\"checked\"":"");
+          $current_group["sfupload"]=($current_group["sfupload"]=="no"?"checked=\"checked\"":"");
+          
+    # End
+    #######################################################        
+
+	]]>
+
+	</data>
+
+    </operation>
+
+
+    <operation>
+      <search><![CDATA[                   $update[]="can_download=".sqlesc(isset($_POST["down"])?"yes":"no");]]></search>
+      <action>"add"</action>
+      <where>"after"</where>
+      <data>
+
+	<![CDATA[
+
+    #######################################################
+    # Disable user group stats count
+        
+                   $update[]="sfdownload=".sqlesc(isset($_POST["sfdownload"])?"no":"yes");
+                   $update[]="sfupload=".sqlesc(isset($_POST["sfupload"])?"no":"yes");          
+    # End
+    #######################################################        
+
+	]]>
+
+	</data>
+
+    </operation>
+
+    <operation>
+      <search><![CDATA[                $groups[$i]["can_download"]=$level["can_download"];]]></search>
+      <action>"add"</action>
+      <where>"after"</where>
+      <data>
+
+	<![CDATA[
+
+                #######################################################
+                # Disable user group stats count
+
+                if ($level["sfdownload"]=='' || $level["sfupload"]=='') {
+                $level["sfdownload"] = "yes";
+                $level["sfupload"] = "yes";
+                }
+
+                $groups[$i]["stat_count"]=$level["sfdownload"]."/".$level["sfupload"];
+                
+                # End
+                #######################################################        
+	]]>
+
+	</data>
+
+    </operation>
+
+
+  </file>
+
+
+  <file>
+    <name>"$DEFAULT_ROOT/style/xbtit_default/admin.groups.tpl"</name>
+
+    <operation>
+      <search><![CDATA[      <td class="lista"><input type="checkbox" name="down" <tag:group.can_download /> /></td>]]></search>
+      <action>"add"</action>
+      <where>"after"</where>
+      <data>
+
+	<![CDATA[
+
+<!-- #######################################################
+    # Disable user group stats count -->
+
+     </tr>
+
+	<tr>
+
+      <td class="header"><tag:language.DISABLE_STATS_COUNT /></td>
+
+      <td class="lista">
+      <tag:language.DOWNLOAD /><input type="checkbox" name="sfdownload" <tag:group.sfdownload /> />&nbsp;&nbsp;
+      <tag:language.MNU_UPLOAD /><input type="checkbox" name="sfupload" <tag:group.sfupload /> />      
+      </td>
+
+
+<!--# End
+    ####################################################### -->       
+
+	]]>
+
+	</data>
+
+    </operation>
+
+
+    <operation>
+      <search><![CDATA[    <td class="header" align="center"><tag:language.DOWNLOAD /></td>]]></search>
+      <action>"add"</action>
+      <where>"after"</where>
+      <data>
+
+	<![CDATA[
+
+<!-- #######################################################
+    # Disable user group stats count -->
+
+    <td class="header" align="center"><tag:language.STATS_COUNT /><br /><tag:language.DOWNLOAD />/<tag:language.MNU_UPLOAD /></td>
+
+<!--# End
+    ####################################################### -->       
+
+
+	]]>
+
+	</data>
+
+    </operation>
+
+
+    <operation>
+      <search><![CDATA[    <td class="lista" align="center"><tag:groups[].can_download /></td>]]></search>
+      <action>"add"</action>
+      <where>"after"</where>
+      <data>
+
+	<![CDATA[
+
+<!-- #######################################################
+    # Disable user group stats count -->
+
+    <td class="lista" align="center"><tag:groups[].stat_count /></td>
+
+<!--# End
+    ####################################################### -->       
+
+
+	]]>
+
+	</data>
+
+    </operation>
+
+    <operation>
+      <search><![CDATA[    <td class="header" align="center" colspan="10"><tag:group_add_new /></td>]]></search>
+      <action>replace</action>
+      <data>
+
+	<![CDATA[
+
+<!-- #######################################################
+    # Disable user group stats count -->
+
+    <td class="header" align="center" colspan="11"><tag:group_add_new /></td>
+
+<!--# End
+    ####################################################### -->       
+
+
+	]]>
+
+	</data>
+    </operation>
+
+
+  </file>
+
+
+  <file>
+    <name>"$DEFAULT_ROOT/language/english/lang_main.php"</name>
+
+    <operation>
+      <search><![CDATA[$language["MODULE_LOAD_ERROR"]="The module required seems to be wrong!";]]></search>
+      <action>"add"</action>
+      <where>"after"</where>
+      <data>
+
+	<![CDATA[
+
+$language["DISABLE_STATS_COUNT"]="Disable user group stats count for";
+$language["STATS_COUNT"]="Stats Count";
+
+	]]>
+
+	</data>
+
+    </operation>
+
+
+  </file>
+
+
+</hack>
+

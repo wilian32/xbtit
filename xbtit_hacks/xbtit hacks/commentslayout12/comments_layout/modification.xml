@@ -1,0 +1,144 @@
+﻿<hack>
+  <title>Comments Layout</title>
+  <author>Real_ptr</author>
+  <version>1.2</version>
+  <file>
+    <name>"$CURRENT_FOLDER/files/arany.png"</name>
+    <operation>
+      <action>"copy"</action>
+      <where>"$DEFAULT_ROOT/images"</where>
+      <data>"arany.png"</data>
+    </operation>
+  </file>
+  <file>
+    <name>"$CURRENT_FOLDER/files/speed_down.png"</name>
+    <operation>
+      <action>"copy"</action>
+      <where>"$DEFAULT_ROOT/images"</where>
+      <data>"speed_down.png"</data>
+    </operation>
+  </file>
+  <file>
+    <name>"$CURRENT_FOLDER/files/speed_up.png"</name>
+    <operation>
+      <action>"copy"</action>
+      <where>"$DEFAULT_ROOT/images"</where>
+      <data>"speed_up.png"</data>
+    </operation>
+  </file>
+  <file>
+    <name>"$DEFAULT_ROOT/details.php"</name>
+    <operation>
+      <search><![CDATA[$subres = do_sqlquery("SELECT]]></search>
+      <action>"add"</action>
+      <where>"after"</where>
+      <data><![CDATA[ u.downloaded as downloaded, u.uploaded as uploaded, u.avatar, u.id_level, ]]></data>
+    </operation>
+    <operation>
+      <search><![CDATA[// comments...]]></search>
+      <action>"add"</action>
+      <where>"after"</where>
+      <data><![CDATA[
+      if ($XBTT_USE)
+   {
+    $subres = do_sqlquery("SELECT u.downloaded+IFNULL(x.downloaded,0) as downloaded, u.uploaded+IFNULL(x.uploaded,0) as uploaded, u.avatar, c.id, c.text, UNIX_TIMESTAMP(c.added) as data, c.user, u.id uid, u.id_level FROM {$TABLE_PREFIX}comments c LEFT JOIN {$TABLE_PREFIX}users u ON c.user=u.username LEFT JOIN xbt_users x ON x.uid=u.id LEFT JOIN {$TABLE_PREFIX}users_level ul ON u.id_level=ul.id WHERE info_hash = '" . $id . "' ORDER BY c.added DESC");
+   }
+else
+    {
+    ]]></data>
+    </operation>
+    <operation>
+      <search><![CDATA[ORDER BY added DESC");]]></search>
+      <action>"add"</action>
+      <where>"after"</where>
+      <data><![CDATA[
+      }
+      ]]></data>
+    </operation>
+    <operation>
+      <search><![CDATA[unesc($subrow["user"])]]></search>
+      <action>"add"</action>
+      <where>"after"</where>
+      <data><![CDATA[."</a>"]]></data>
+    <operation>
+      <search><![CDATA[$subrow["data"]-$offset);]]></search>
+      <action>"add"</action>
+      <where>"after"</where>
+      <data><![CDATA[
+       $comments[$count]["elapsed"]="(".get_elapsed_time($subrow["data"]) . " ago)";
+       $comments[$count]["avatar"]="<img onload=\"resize_avatar(this);\" src=\"".($subrow["avatar"] && $subrow["avatar"] != "" ? htmlspecialchars($subrow["avatar"]): "$STYLEURL/images/default_avatar.gif" )."\" alt=\"\" />";
+       $comments[$count]["ratio"]="<img src=\"images/arany.png\">&nbsp;".(intval($subrow['downloaded']) > 0?number_format($subrow['uploaded'] / $subrow['downloaded'], 2):"---");
+       $comments[$count]["uploaded"]="<img src=\"images/speed_up.png\">&nbsp;".(makesize($subrow["uploaded"]));
+       $comments[$count]["downloaded"]="<img src=\"images/speed_down.png\">&nbsp;".(makesize($subrow["downloaded"]));
+]]></data>
+    </operation>
+  </file>
+  <file>
+    <name>"$DEFAULT_ROOT/index.php"</name>
+    <operation>
+      <search><![CDATA[case 'delete':]]></search>
+      <action>"add"</action>
+      <where>"before"</where>
+      <data><![CDATA[
+
+          case 'comment-edit':
+        require("$THIS_BASEPATH/commedit.php");
+        $tpl->set("main_content",set_block($language["COMMENTS"],"center",$tpl_comment->fetch(load_template("comment.edit.tpl")),false));
+        $tpl->set("main_title",$btit_settings["name"]." .::. "."Comment Edit");
+        break;
+
+]]></data>
+    </operation>
+  </file>
+  <file>
+    <name>"$DEFAULT_STYLE_PATH/torrent.details.tpl"</name>
+    <operation>
+      <search><![CDATA[<loop:comments>
+        <tr>
+          <td class="header"><tag:comments[].user /></td>
+          <td class="header"><tag:comments[].date /></td>
+          <td class="header" align="right"><tag:comments[].delete /></td>
+        </tr>
+        <tr>
+          <td colspan="3" class="lista" align="center"><tag:comments[].comment /></td>
+        </tr>
+        </loop:comments>]]></search>
+      <action>"replace"</action>
+      <data><![CDATA[        <loop:comments>
+        <tr>
+        <td align="left" class="header" colspan="2">
+        <table width="100%">
+        <td align="right"><tag:comments[].delete /></td>
+        </table>
+        </td>
+        </tr>
+        <tr>
+        <td class="header" align="left" valign="top">
+        <table width="140">
+        <tr>
+          <td>
+          <tag:comments[].user />
+          <br />
+          <tag:comments[].date />
+          <br />
+          <tag:comments[].elapsed />
+          <br />
+          <tag:comments[].avatar />
+          <br />
+          <tag:comments[].ratio />
+          <br />
+          <tag:comments[].uploaded />
+          <br />
+          <tag:comments[].downloaded />
+          </td>
+        </tr>
+        </table>
+        </td>
+        <td class="lista" width="100%" valign="top" style="padding:10px">
+        <tag:comments[].comment /></td>
+        </tr>
+        </loop:comments>
+]]></data>
+    </operation>
+  </file>
+</hack>

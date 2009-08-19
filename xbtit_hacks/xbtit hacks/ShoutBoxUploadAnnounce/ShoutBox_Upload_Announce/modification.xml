@@ -1,0 +1,31 @@
+<hack>
+  <title>ShoutBox Upload's Announce</title>
+  <author>Lupin</author>
+  <version>1.0</version>
+  <file>
+    <name>"$DEFAULT_ROOT/upload.php"</name>
+    <operation>
+      <action>"add"</action>
+      <search><![CDATA[
+             {
+              if ($DHT_PRIVATE)
+                   {
+                   $alltorrent=bencode($array);
+                   $fd = fopen($TORRENTSDIR . "/" . $hash . ".btf", "rb+");
+                   fwrite($fd,$alltorrent);
+                   fclose($fd);
+                   }
+                // with pid system active or private flag (dht disabled), tell the user to download the new torrent
+                write_log("Uploaded new torrent $filename ($hash)","add");
+               
+            $status=1;
+         }
+]]></search>
+      <where>"after"</where>
+      <data><![CDATA[
+         global $BASEURL;
+         do_sqlquery("INSERT INTO {$TABLE_PREFIX}chat (uid, time, name, text) VALUES (0,".time().", 'System','[color=red]NEW TORRENT[/color]: [url=$BASEURL/index.php?page=torrent-details&id=$hash]".$filename."[/url]')");
+]]></data>
+    </operation>
+  </file>
+</hack>

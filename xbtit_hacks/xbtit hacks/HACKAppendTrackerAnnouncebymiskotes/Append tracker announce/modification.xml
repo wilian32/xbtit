@@ -1,0 +1,155 @@
+<hack>
+
+  <title>Append tracker announce</title>
+  <author>miskotes</author>
+  <version>0.5.0.515 beta</version>
+  <file>
+    <name>"$DEFAULT_ROOT/upload.php"</name>
+
+    <operation>
+      <search><![CDATA[case 2: 
+    $tplfile="upload_finish";]]></search>
+      <action>"add"</action>
+      <where>"after"</where>
+      <data>
+
+	<![CDATA[
+
+      ###################################################################
+      # Append tracker announce
+
+        $uploadtpl->set("DOWNLOAD","<br /><a href=\"download.php?id=$hash&f=".urlencode($filename).".torrent\">".$language["DOWNLOAD"]."</a><br /><br />");
+        
+        if ($XBTT_USE) do_sqlquery("INSERT INTO xbt_files SET info_hash=0x$hash ON DUPLICATE KEY UPDATE flags=0",true);
+        
+      # End
+      ##################################################################
+      
+	]]>
+
+	</data>
+
+    </operation>
+
+
+  </file>
+  
+    <file>
+    <name>"$DEFAULT_ROOT/download.php"</name>
+    
+   <operation>
+      <search><![CDATA[if ($row["external"]=="yes" || !$PRIVATE_ANNOUNCE)
+   {
+    $fd = fopen($filepath, "rb");
+    $alltorrent = fread($fd, filesize($filepath));
+    fclose($fd);
+    header("Content-Type: application/x-bittorrent");
+    header('Content-Disposition: attachment; filename="'.$f.'"');
+    print($alltorrent);
+   }]]></search>
+      <action>replace</action>
+      <data>
+
+	<![CDATA[
+
+###################################################################
+# Append tracker announce
+
+if ($row["external"]=="yes") {
+
+    $fd = fopen($filepath, "rb");
+    $alltorrent = fread($fd, filesize($filepath));
+    fclose($fd);
+    
+    $alltorrent=BDecode($alltorrent);
+      
+      if ($PRIVATE_ANNOUNCE) {
+         if ($XBTT_USE) $announce = $XBTT_URL."/$pid/announce"; else $announce = $BASEURL."/announce.php?pid=$pid";
+      } else { 
+           if ($XBTT_USE) $announce = $XBTT_URL."/announce"; else $announce = $BASEURL."/announce.php";
+        }
+             if (isset($alltorrent["announce-list"])) $alltorrent["announce-list"][][0] = $announce;
+              else $alltorrent["announce-list"] = array(array($announce), array($alltorrent["announce"]));
+
+                $alltorrent["announce"] = $announce;
+     
+    $alltorrent=BEncode($alltorrent);
+
+    header("Content-Type: application/x-bittorrent");
+    header('Content-Disposition: attachment; filename="'.$f.'"');
+    print_r($alltorrent);
+
+    if ($XBTT_USE) {
+      $xbthash=do_sqlquery("SELECT info_hash FROM xbt_files WHERE info_hash=UNHEX('$infohash')");
+        if (mysql_num_rows($xbthash)==0) do_sqlquery("INSERT INTO xbt_files SET info_hash=0x$infohash ON DUPLICATE KEY UPDATE flags=0",true);
+    }
+}
+# End
+##################################################################
+
+
+	]]>
+
+    </data>
+   </operation>
+
+  </file>
+
+    <file>
+    <name>"$DEFAULT_ROOT/torrents.php"</name>
+    
+   <operation>
+      <search><![CDATA[$torrents[$i]["filename"]="<a href=\"javascript:popdetails('index.php?page=torrent-details&amp;id=".$data["hash"]."');\" title=\"".$language["VIEW_DETAILS"].": ".($data["filename"]!=""?$filename:$data["hash"])."\">".$data["filename"]."</a>".($data["external"]=="no"?"":" (<span style=\"color:red\">EXT</span>)");]]></search>
+      <action>replace</action>
+      
+      <data><![CDATA[$torrents[$i]["filename"]="<a href=\"javascript:popdetails('index.php?page=torrent-details&amp;id=".$data["hash"]."');\" title=\"".$language["VIEW_DETAILS"].": ".($data["filename"]!=""?$filename:$data["hash"])."\">".$data["filename"]."</a>".($data["external"]=="no"?"":" (<span style=\"color:red\">Multi.</span>)");]]></data>
+   </operation>
+   
+   <operation>
+      <search><![CDATA[$torrents[$i]["filename"]="<a href=\"index.php?page=torrent-details&amp;id=".$data["hash"]."\" title=\"".$language["VIEW_DETAILS"].": ".$data["filename"]."\">".($data["filename"]!=""?$filename:$data["hash"])."</a>".($data["external"]=="no"?"":" (<span style=\"color:red\">EXT</span>)");]]></search>
+      <action>replace</action>
+      
+      <data><![CDATA[$torrents[$i]["filename"]="<a href=\"index.php?page=torrent-details&amp;id=".$data["hash"]."\" title=\"".$language["VIEW_DETAILS"].": ".$data["filename"]."\">".($data["filename"]!=""?$filename:$data["hash"])."</a>".($data["external"]=="no"?"":" (<span style=\"color:red\">Multi.</span>)");]]></data>
+   </operation>
+
+  </file>
+
+    <file>
+    <name>"$DEFAULT_ROOT/blocks/lasttorrents_block.php"</name>
+    
+   <operation>
+      <search><![CDATA[echo "\n\t<td width=\"55%\" class=\"lista\" style=\"padding-left:10px;\"><a href=\"javascript:popdetails('index.php?page=torrent-details&amp;id=" . $data['hash'] . "');\" title=\"" . $language["VIEW_DETAILS"] . ": " . $data["filename"] . "\">" . $filename . "</a>".($data["external"]=="no"?"":" (<span style=\"color:red\">EXT</span>)")."</td>";]]></search>
+      <action>replace</action>
+      
+      <data><![CDATA[echo "\n\t<td width=\"55%\" class=\"lista\" style=\"padding-left:10px;\"><a href=\"javascript:popdetails('index.php?page=torrent-details&amp;id=" . $data['hash'] . "');\" title=\"" . $language["VIEW_DETAILS"] . ": " . $data["filename"] . "\">" . $filename . "</a>".($data["external"]=="no"?"":" (<span style=\"color:red\">Multi.</span>)")."</td>";]]></data>
+   </operation>
+   
+   <operation>
+      <search><![CDATA[echo "\n\t<td width=\"55%\" class=\"lista\" style=\"padding-left:10px;\"><a href=\"index.php?page=torrent-details&amp;id=" . $data['hash'] . "\" title=\"" . $language["VIEW_DETAILS"]. ": " . $data["filename"] . "\">" . $filename . "</a>".($data["external"]=="no"?"":" (<span style=\"color:red\">EXT</span>)")."</td>";]]></search>
+      <action>replace</action>
+      
+      <data><![CDATA[echo "\n\t<td width=\"55%\" class=\"lista\" style=\"padding-left:10px;\"><a href=\"index.php?page=torrent-details&amp;id=" . $data['hash'] . "\" title=\"" . $language["VIEW_DETAILS"]. ": " . $data["filename"] . "\">" . $filename . "</a>".($data["external"]=="no"?"":" (<span style=\"color:red\">Multi.</span>)")."</td>";]]></data>
+   </operation>
+
+  </file>
+
+    <file>
+    <name>"$DEFAULT_ROOT/blocks/toptorrents_block.php"</name>
+    
+   <operation>
+      <search><![CDATA[echo "\t<td width=\"55%\" class=\"lista\" style=\"padding-left:10px;\"><a href=\"javascript:popdetails('index.php?page=torrent-details&amp;id=" . $data['hash'] . "');\" title=\"" . $language["VIEW_DETAILS"] . ": " . $data["filename"] . "\">" . $filename . "</a>".($data["external"]=="no"?"":" (<span style=\"color:red\">EXT</span>)")."</td>";]]></search>
+      <action>replace</action>
+      
+      <data><![CDATA[echo "\t<td width=\"55%\" class=\"lista\" style=\"padding-left:10px;\"><a href=\"javascript:popdetails('index.php?page=torrent-details&amp;id=" . $data['hash'] . "');\" title=\"" . $language["VIEW_DETAILS"] . ": " . $data["filename"] . "\">" . $filename . "</a>".($data["external"]=="no"?"":" (<span style=\"color:red\">Multi.</span>)")."</td>";]]></data>
+   </operation>
+   
+   <operation>
+      <search><![CDATA[echo "\t<td width=\"55%\" class=\"lista\" style=\"padding-left:10px;\"><a href=\"index.php?page=torrent-details&amp;id=" . $data['hash'] . "\" title=\"" . $language["VIEW_DETAILS"] . ": " . $data["filename"] . "\">" . $filename . "</a>".($data["external"]=="no"?"":" (<span style=\"color:red\">EXT</span>)")."</td>";]]></search>
+      <action>replace</action>
+      
+      <data><![CDATA[echo "\t<td width=\"55%\" class=\"lista\" style=\"padding-left:10px;\"><a href=\"index.php?page=torrent-details&amp;id=" . $data['hash'] . "\" title=\"" . $language["VIEW_DETAILS"] . ": " . $data["filename"] . "\">" . $filename . "</a>".($data["external"]=="no"?"":" (<span style=\"color:red\">Multi.</span>)")."</td>";]]></data>
+   </operation>
+
+  </file>
+
+</hack>

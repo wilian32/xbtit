@@ -1,0 +1,137 @@
+<hack>
+  <title>Featured Torrent Block</title>
+  <author>mcangeli</author>
+  <version>0.5</version>
+  <!-- language/english/lang_blocks.php -->
+  <file>
+    <name>"$DEFAULT_ROOT/language/english/lang_blocks.php"</name>
+    <operation>
+      <search><![CDATA[?>]]></search>
+      <action>"add"</action>
+      <data><![CDATA[
+
+$language["BLOCK_FEATURED"]="Featured Torrent";
+
+]]></data>
+      <where>"before"</where>
+    </operation>
+  </file>
+  
+
+<!-- admin/admin.menu.php -->
+  <file>
+    <name>"$DEFAULT_ROOT/admin/admin.menu.php"</name>
+    <operation>
+      <search><![CDATA[language["ACP_BLOCKS"])]]></search>
+      <action>"add"</action>
+      <data><![CDATA[ ,
+                4=>array(
+             "url"=>"index.php?page=admin&amp;user=".$CURUSER["uid"]."&amp;code=".$CURUSER["random"]."&amp;do=featured&amp;action=read" ,
+             "description"=>$language["ACP_FEATURED"])
+             
+       
+]]></data>
+      <where>"after"</where>
+    </operation>
+  </file>
+
+<!-- admin/admin.index.php -->
+  <file>
+    <name>"$DEFAULT_ROOT/admin/admin.index.php"</name>
+    <operation>
+      <search><![CDATA[$tpl->set("main_content",set_block($language["BLOCKS_SETTINGS"],"center",$admintpl->fetch(load_template("admin.blocks.tpl"))));
+      break;
+]]></search>
+      <action>"add"</action>
+      <data><![CDATA[
+
+    case 'featured':
+      include("$ADMIN_PATH/admin.featured.php");
+      $tpl->set("main_content",set_block($language["FEATURED_SETTINGS"],"center",$admintpl->fetch(load_template("admin.featured.tpl"))));
+      break;
+
+]]></data>
+      <where>"after"</where>
+    </operation>
+  </file>
+
+<!-- language/english/lang_admin.php -->
+  <file>
+    <name>"$DEFAULT_ROOT/language/english/lang_admin.php"</name>
+    <operation>
+      <search><![CDATA[$language["ACP_MYSQL_STATS"]="MySql Statistics";]]></search>
+      <action>"add"</action>
+      <data><![CDATA[
+
+$language["ACP_FEATURED"]="Featured Torrent";
+
+]]></data>
+      <where>"after"</where>
+    </operation>
+  </file>
+
+
+
+  <file>
+    <name>"$CURRENT_FOLDER/new/featured_block.php"</name>
+    <operation>
+      <action>"copy"</action>
+      <where>"$DEFAULT_ROOT/blocks"</where>
+      <data>"featured_block.php"</data>
+    </operation>
+  </file>
+  <file>
+    <name>"$CURRENT_FOLDER/new/piechart2.php"</name>
+    <operation>
+      <action>"copy"</action>
+      <where>"$DEFAULT_ROOT/images"</where>
+      <data>"piechart2.php"</data>
+    </operation>
+  </file>
+<file>
+    <name>"$CURRENT_FOLDER/new/admin.featured.php"</name>
+    <operation>
+      <action>"copy"</action>
+      <where>"$DEFAULT_ROOT/admin"</where>
+      <data>"admin.featured.php"</data>
+    </operation>
+  </file>
+<file>
+    <name>"$CURRENT_FOLDER/new/admin.featured.tpl"</name>
+    <operation>
+      <action>"copy"</action>
+      <where>"$DEFAULT_ROOT/style/xbtit_default"</where>
+      <data>"admin.featured.tpl"</data>
+    </operation>
+  </file>
+<file>
+    <name>"$CURRENT_FOLDER/new/lang_featured.php"</name>
+    <operation>
+      <action>"copy"</action>
+      <where>"$DEFAULT_ROOT/language/english"</where>
+      <data>"lang_featured.php"</data>
+    </operation>
+  </file>
+
+  <file>
+    <name>"database"</name>
+    <operation>
+      <action>"sql"</action>
+      <data><![CDATA[
+CREATE TABLE {$db_prefix}featured (
+`fid` INT( 5 ) NOT NULL AUTO_INCREMENT ,
+`torrent_id` VARCHAR( 40 ) NOT NULL ,
+PRIMARY KEY ( `fid` )
+) TYPE = MYISAM ;]]></data>
+    </operation>
+  </file>
+  <file>
+    <name>"database"</name>
+    <operation>
+      <action>"sql"</action>
+      <data><![CDATA[INSERT INTO {$db_prefix}blocks (content, position,sortid,status,title,cache,minclassview,maxclassview)
+      VALUES ('featured','c',0,1,'BLOCK_FEATURED','yes',3,8);]]></data>
+    </operation>
+  </file>
+
+</hack>
